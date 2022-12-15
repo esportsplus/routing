@@ -1,4 +1,4 @@
-import { middleware } from '~/request';
+import { factory } from '~/middleware';
 import { Request } from '~/types';
 
 
@@ -13,5 +13,5 @@ export default (request: Request) => {
         return route.responder(request);
     }
 
-    return middleware(...route.middleware, (request => route.responder(request)))(request);
+    return factory(...route.middleware, (request => route.responder(request)))(request);
 };

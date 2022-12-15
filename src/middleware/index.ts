@@ -1,5 +1,5 @@
-import dispatch from './dispatch';
-import match from './match';
+import factory from './factory';
 
 
-export default { dispatch, match };
+export default { factory };
+export { factory };

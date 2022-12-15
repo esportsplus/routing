@@ -1,9 +1,14 @@
-export default (url: string = window.location.href) => {
+const parse = (url: string = window.location.href) => {
     let data = new URL( url ),
-        subdomain = data.host.split('.')[0] || '';
-
-    if (['127', 'www'].includes(`${subdomain}`)) {
+        parts = data.host.split('.'),
         subdomain = '';
+
+    if (parts.length > 2) {
+        subdomain = parts[0];
+
+        if (['127', 'www'].includes(subdomain)) {
+            subdomain = '';
+        }
     }
 
     return {
@@ -19,3 +24,7 @@ export default (url: string = window.location.href) => {
         subdomain
     };
 };
+
+
+export default { parse };
+export { parse };

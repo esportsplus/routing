@@ -1,4 +1,4 @@
-import { parse } from './request';
+import { parse } from './url';
 
 
 let data: Record<string, any>,

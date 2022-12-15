@@ -1,4 +1,4 @@
-import { Middleware, Request } from './types';
+import { Middleware, Request } from '~/types';
 
 
 export default (...middleware: Middleware[]) => {

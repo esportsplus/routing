@@ -1,5 +1,5 @@
-import { Middleware, Next, Request, Responder } from "./request/types";
 import { Routes } from './routes';
+import { parse } from './url';
 
 
 type Group = {
@@ -8,6 +8,14 @@ type Group = {
     pattern: string;
     subdomain: string;
 };
+
+type Middleware = (request: Request, next: Next) => unknown;
+
+type Next = (request: Request) => unknown;
+
+type Request = ReturnType<typeof parse>;
+
+type Responder = (request: Request) => Promise<unknown> | unknown;
 
 type Route = {
     middleware: Middleware[];
