@@ -1,6 +1,7 @@
 const parse = (url: string = window.location.href) => {
-    let data = new URL( url ),
-        parts = data.host.split('.'),
+    let { hash, host, hostname, href, origin, pathname, port, protocol } = new URL( url ),
+        parts = host.split('.'),
+        path = hash?.replace('#/', '/')?.split('?') || ['/', ''],
         subdomain = '';
 
     if (parts.length > 2) {
@@ -13,14 +14,14 @@ const parse = (url: string = window.location.href) => {
 
     return {
         data: {} as Record<string, any>,
-        href: data.href,
-        hostname: data.hostname,
-        uri: data.hash.replace('#/', '/') || '/',
-        origin: data.origin,
-        pathname: data.pathname,
-        port: data.port,
-        protocol: data.protocol,
-        query: Object.fromEntries( data.searchParams.entries() ),
+        href: href,
+        hostname: hostname,
+        uri: path[0],
+        origin: origin,
+        pathname: pathname,
+        port: port,
+        protocol: protocol,
+        query: Object.fromEntries( (new URLSearchParams(path[1])).entries() ),
         subdomain
     };
 };
