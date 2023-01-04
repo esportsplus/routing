@@ -1,63 +1,68 @@
-import { Group, Responder, Route } from './types';
+import { Group, Responder, Routes, Route } from './types';
 
 
-class Routes {
-    dynamic: Record<Route['name'], Route> = {};
-    fallback?: string;
-    groups: Group[] = [];
-    static: Record<Route['name'], Route> = {};
-    subdomains: Record<Route['subdomain'], Record<Route['pattern'], Route['name']>> = {};
+let groups: Group[] = [],
+    routes: Record<Route['name'], Route> = {},
+    subdomains: Record<NonNullable<Route['subdomain']>, Record<NonNullable<Route['path']>, Route['name']>> = {};
 
 
-    add(name: string, pattern: string, responder: Responder) {
-        let route: Route = {
-                middleware: [],
-                name: '',
-                pattern: '',
-                responder,
-                subdomain: ''
-            };
+const add = ({ name, path, responder }: { name: string, path?: string, responder: Responder }) => {
+    let http = path !== undefined,
+        route: Route = {
+            middleware: [],
+            name: '',
+            responder
+        };
 
-        for (let i = 0, n = this.groups.length; i < n; i++) {
-            let group = this.groups[i];
+    if (http) {
+        route.path = '';
+        route.subdomain = '';
+    }
 
-            route.name += group.name;
-            route.pattern += group.pattern;
+    for (let i = 0, n = groups.length; i < n; i++) {
+        let group = groups[i];
+
+        if (group.middleware.length) {
+            route.middleware.push(...group.middleware);
+        }
+
+        route.name += group.name;
+
+        if (http) {
+            route.path += group.path;
             route.subdomain = group.subdomain + route.subdomain;
+        }
+    }
 
-            if (group.middleware.length) {
-                route.middleware.push(...group.middleware);
-            }
+    routes[ route.name += name ] = route;
+
+    if (http) {
+        route.path = `${route.path}${path}`;
+
+        if (route.path[0] !== '/') {
+            route.path = `/${route.path}`;
         }
 
-        route.name += name;
-        route.pattern += pattern;
-
-        if (route.pattern[0] !== '/') {
-            route.pattern = `/${route.pattern}`;
-        }
-
-        if (route.subdomain === 'www') {
+        if (!route.subdomain || route.subdomain === 'www') {
             route.subdomain = '';
         }
 
-        if (!this.subdomains[route.subdomain]) {
-            this.subdomains[route.subdomain] = {};
+        if (!subdomains[route.subdomain]) {
+            subdomains[route.subdomain] = {};
         }
 
-        this.static[route.name] = route;
-        this.subdomains[route.subdomain][route.pattern] = route.name;
-
-        return route;
+        subdomains[route.subdomain][route.path] = route.name;
     }
 
-    group(group: any, routes: (routes: Routes) => void) {
-        this.groups.push(group);
-        routes(this);
-        this.groups.pop();
-    }
-}
+    return route;
+};
+
+const group = (group: any, fn: (routes: Routes) => void) => {
+    groups.push(group);
+    fn({ add, group, routes, subdomains });
+    groups.pop();
+};
 
 
-export default new Routes();
-export { Routes };
+export default { add, group, routes, subdomains };
+export { add, group, routes, subdomains };

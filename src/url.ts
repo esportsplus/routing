@@ -1,5 +1,5 @@
-const parse = (url: string = window.location.href) => {
-    let { hash, host, hostname, href, origin, pathname, port, protocol } = new URL( url ),
+const parse = (url: string = window?.location?.href || '') => {
+    let { hash, host, hostname, href, origin, port, protocol } = new URL( url ),
         parts = host.split('.'),
         path = hash?.replace('#/', '/')?.split('?') || ['/', ''],
         subdomain = '';
@@ -16,9 +16,8 @@ const parse = (url: string = window.location.href) => {
         data: {} as Record<string, any>,
         href: href,
         hostname: hostname,
-        uri: path[0],
         origin: origin,
-        pathname: pathname,
+        path: path[0],
         port: port,
         protocol: protocol,
         query: Object.fromEntries( (new URLSearchParams(path[1])).entries() ),

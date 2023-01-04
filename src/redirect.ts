@@ -1,4 +1,4 @@
-import routes from './routes';
+import { routes } from './routes';
 
 
 export default (key: string, _: Record<string, any> = {}) => {
@@ -8,9 +8,9 @@ export default (key: string, _: Record<string, any> = {}) => {
     }
 
     // Internal route based redirect
-    if (!routes.static[key]) {
+    if (!routes[key]) {
         throw new Error(`Route '${key}' does not exist`);
     }
 
-    window.location.hash = `#${routes.static[key].pattern}`;
+    window.location.hash = `#${routes[key].path || ''}`;
 };

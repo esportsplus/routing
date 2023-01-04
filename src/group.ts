@@ -5,7 +5,7 @@ export default (): Group => {
     return {
         middleware: [],
         name: '',
-        pattern: '',
+        path: '',
         subdomain: ''
     };
 };

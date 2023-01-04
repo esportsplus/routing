@@ -1,11 +1,10 @@
-import { Routes } from '~/routes';
-import { Next, Request } from '~/types';
+import { Next, Request, Routes } from '~/types';
 
 
-export default (routes: Routes) => {
+export default ({ routes, subdomains }: Routes) => {
     return (request: Request, next: Next) => {
-        let name = (routes.subdomains[request.subdomain] || {})[request.uri],
-            route = routes.static[name];
+        let name = (subdomains[request.subdomain] || {})[request.path],
+            route = routes[name];
 
         // Dynamic routing
         if (!route) {
@@ -14,9 +13,8 @@ export default (routes: Routes) => {
             // - Bind variables to request
         }
 
-        // Fallback route
         if (!route && routes.fallback) {
-            route = routes.static[routes.fallback];
+            route = routes.fallback;
         }
 
         request.data.route = route;

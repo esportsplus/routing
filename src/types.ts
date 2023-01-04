@@ -1,11 +1,11 @@
-import { Routes } from './routes';
 import { parse } from './url';
+import routes from './routes';
 
 
 type Group = {
     middleware: Middleware[];
     name: string;
-    pattern: string;
+    path: string;
     subdomain: string;
 };
 
@@ -17,12 +17,19 @@ type Request = ReturnType<typeof parse>;
 
 type Responder = (request: Request) => Promise<unknown> | unknown;
 
+type Routes = {
+    add: typeof routes.add;
+    group: typeof routes.group;
+    routes: typeof routes.routes;
+    subdomains: typeof routes.subdomains;
+};
+
 type Route = {
     middleware: Middleware[];
     name: string;
-    pattern: string;
+    path?: string;
     responder: Responder;
-    subdomain: string;
+    subdomain?: string;
 };
 
 
