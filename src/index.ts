@@ -7,3 +7,4 @@ import url from './url';
 
 export default { listener, middleware, redirect, routes, url };
 export { listener, middleware, redirect, routes, url };
+export * from './types';
