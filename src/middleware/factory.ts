@@ -1,20 +1,21 @@
-import { Middleware, Request } from '~/types';
+import { Middleware, Next, Request } from '~/types';
 
 
-export default (...middleware: Middleware[]) => {
-    let i = -1,
-        n = middleware.length,
-        next = (request: Request) => middleware[++i](request, (i < n ? next : () => {
-            throw new Error('Request middleware did not return a responder');
-        }));
+function error() {
+    throw new Error('Request middleware did not return a responder');
+}
 
-    return async (request: Request) => {
-        if (!middleware.length) {
-            throw new Error('Request middleware has not been defined');
-        }
 
-        i = -1;
+export default (...m: Middleware[]) => {
+    let middleware: Next[] = [];
 
-        return await next(request);
-    };
+    for (let i = 0, n = m.length; i < n; i++) {
+        middleware[i] = (request: Request) => m[i](request, middleware[i + 1] || error);
+    }
+
+    if (!middleware.length) {
+        throw new Error('Request middleware has not been defined');
+    }
+
+    return async (request: Request) => await middleware[0](request);
 };
