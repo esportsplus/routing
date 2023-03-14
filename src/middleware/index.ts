@@ -1,6 +1,7 @@
-import common from './common';
+import dispatch from './dispatch';
 import factory from './factory';
+import match from './match';
 
 
-export default { common, factory };
-export { common, factory };
+export default { dispatch, factory, match };
+export { dispatch, factory, match };

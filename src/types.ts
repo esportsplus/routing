@@ -1,36 +1,19 @@
-import { parse } from './url';
-import routes from './routes';
+import { Route, Router } from './router';
 
 
-type Group = {
-    middleware: Middleware[];
-    name: string;
-    path: string;
-    subdomain: string;
-};
+type Middleware = <T>(request: T, next: Next) => unknown;
 
-type Middleware = (request: Request, next: Next) => unknown;
+type Next = <T>(request: T) => unknown;
 
-type Next = (request: Request) => unknown;
-
-type Request = ReturnType<typeof parse>;
-
-type Responder = (request: Request) => Promise<unknown> | unknown;
-
-type Routes = {
-    add: typeof routes.add;
-    group: typeof routes.group;
-    routes: typeof routes.routes;
-    subdomains: typeof routes.subdomains;
-};
-
-type Route = {
-    middleware: Middleware[];
-    name: string;
+type Options = {
+    middleware?: Middleware[];
+    name?: string;
     path?: string;
     responder: Responder;
     subdomain?: string;
 };
 
+type Responder = <T>(request: T) => Promise<unknown> | unknown;
 
-export { Group, Middleware, Next, Request, Responder, Route, Routes };
+
+export { Middleware, Next, Options, Responder, Route, Router };

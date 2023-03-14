@@ -1,10 +1,8 @@
+import hash from './hash';
 import middleware from './middleware';
-import redirect from './redirect';
-import listener from './listener';
-import routes from './routes';
-import url from './url';
+import router from './router';
+import slugify from './slugify';
 
 
-export default { listener, middleware, redirect, routes, url };
-export { listener, middleware, redirect, routes, url };
+export { hash, middleware, router, slugify };
 export * from './types';
