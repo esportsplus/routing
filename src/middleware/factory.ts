@@ -6,6 +6,7 @@ function error() {
 }
 
 
+// TODO: Use '@esportsplus/middleware'
 export default (...middleware: Middleware[]) => {
     let stack: Next[] = [];
 
