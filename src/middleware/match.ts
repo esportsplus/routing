@@ -1,19 +1,10 @@
-import { Next, Router } from '~/types';
+import { Next, Request, Router } from '~/types';
 
 
-type Request = {
-    data: ReturnType<Router['match']>;
-    hostname: string;
-    method: string;
-    path: string;
-    subdomain?: string;
-};
-
-
-export default (router: Router, spa = false) => {
+export default (router: Router, { spa }: { spa?: boolean } = {}) => {
     let subdomain: string | null = null;
 
-    return (request: Request, next: Next) => {
+    return (request: Request, next: Next<Request, unknown>) => {
         if ((typeof request.subdomain !== 'string' && !spa) || subdomain === null) {
             if (router.subdomains) {
                 for (let i = 0, n = router.subdomains.length; i < n; i++) {

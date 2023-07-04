@@ -1,6 +1,5 @@
 {
     "author": "ICJR",
-    "description": "Routing",
     "devDependencies": {
         "@esportsplus/rspack": "^0.0.15"
     },
@@ -14,5 +13,8 @@
         "prepublishOnly": "npm run build"
     },
     "types": "./build/index.d.ts",
-    "version": "0.0.10"
+    "version": "0.0.10",
+    "dependencies": {
+        "@esportsplus/middleware": "^0.0.4"
+    }
 }

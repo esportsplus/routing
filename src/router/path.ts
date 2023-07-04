@@ -1,6 +1,6 @@
 const normalize = (path: string) => {
     if (path[0] !== '/') {
-        path = `/${path}`;
+        path = '/' + path;
     }
 
     if (path.endsWith('/')) {
@@ -25,5 +25,4 @@ const radixkey = (path: string, { method, subdomain }: { method?: string | null;
 };
 
 
-export default { normalize, radixkey };
 export { normalize, radixkey };

@@ -1,5 +1,5 @@
+import factory from '@esportsplus/middleware';
 import dispatch from './dispatch';
-import factory from './factory';
 import match from './match';
 
 
