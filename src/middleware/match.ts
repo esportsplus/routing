@@ -1,10 +1,10 @@
-import { Next, Request, Router } from '~/types';
+import { Middleware, Request, Router } from '~/types';
 
 
-export default (router: Router, { spa }: { spa?: boolean } = {}) => {
+export default <R>(router: Router, { spa }: { spa?: boolean } = {}): Middleware<Request, R> => {
     let subdomain: string | null = null;
 
-    return (request: Request, next: Next<Request, unknown>) => {
+    return (request, next) => {
         if ((typeof request.subdomain !== 'string' && !spa) || subdomain === null) {
             if (router.subdomains) {
                 for (let i = 0, n = router.subdomains.length; i < n; i++) {

@@ -1,12 +1,12 @@
-import { Router } from '~/types';
+import { Middleware, Request, Router } from '~/types';
 
 
-export default (request: { data: ReturnType<Router['match']> }) => {
+export default <R>(request: { data: ReturnType<Router['match']> }) => {
     let { route } = request.data;
 
     if (!route) {
         throw new Error(`Routing: route dispatching failed, route is undefined!`);
     }
 
-    return route.dispatcher(request);
+    return route.dispatcher(request) as Middleware<Request, R>;
 };

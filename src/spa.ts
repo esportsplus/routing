@@ -1,33 +1,16 @@
 import { Request, Router } from './types';
 
 
-type Cache = {
-    factory: typeof request;
-    state: Request;
+type Cache<T = Record<string, unknown>> = {
+    factory: () => T;
+    state: T;
 };
 
 
 let cache: Cache[] = [];
 
 
-function update() {
-    for (let i = 0, n = cache.length; i < n; i++) {
-        let { factory, state } = cache[i],
-            values: Request = factory();
-
-        for (let key in values) {
-            // @ts-ignore
-            state[key] = values[key];
-        }
-    }
-}
-
-
-const back = () => window.history.back();
-
-const forward = () => window.history.forward();
-
-const request = (url: string = window?.location?.href || ''): Request => {
+function request(url: string = window?.location?.href || ''): Request {
     let { hash, hostname, href, origin, port, protocol } = new URL( url ),
         path = hash?.replace('#/', '/')?.split('?') || ['/', ''];
 
@@ -42,12 +25,30 @@ const request = (url: string = window?.location?.href || ''): Request => {
         protocol,
         query: Object.fromEntries( (new URLSearchParams(path[1])).entries() )
     };
-};
+}
+
+function update() {
+    for (let i = 0, n = cache.length; i < n; i++) {
+        let { factory, state } = cache[i],
+            values = factory();
+
+        for (let key in values) {
+            state[key] = values[key];
+        }
+    }
+}
 
 
-export default (router: Router, state: Cache['state'], factory?: Cache['factory']) => {
+const back = () => window.history.back();
+
+const forward = () => window.history.forward();
+
+
+export default (router: Router, fn: Cache['factory'] = request) => {
+    let state = {} as ReturnType< typeof fn >;
+
     cache.push({
-        factory: factory || request,
+        factory: fn,
         state
     });
 
@@ -71,7 +72,7 @@ export default (router: Router, state: Cache['state'], factory?: Cache['factory'
 
             window.history.pushState(state || {}, '', uri);
         },
-        request: factory || request,
+        request: state,
         uri: (path: string, values: unknown[] = []) => {
             let uri = router.uri(path, values || []);
 
