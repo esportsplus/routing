@@ -1,4 +1,4 @@
-import { STATIC } from "~/symbols";
+import { STATIC } from "~/constants";
 import { Options } from '~/types';
 import { Node } from './node';
 import { normalize, radixkey } from './path';
@@ -8,13 +8,13 @@ import { Route } from './route';
 let { isArray } = Array;
 
 
-function set(route: Route, key: keyof Route, value?: any) {
+function set(route: Route, key: keyof Route, value?: unknown) {
     if (!value) {
         return;
     }
 
     if (!route[key]) {
-        (route[key] as any) = value;
+        (route[key] as unknown) = value;
     }
     else if (typeof value === 'string') {
         if (typeof route[key] === 'string') {
@@ -23,7 +23,7 @@ function set(route: Route, key: keyof Route, value?: any) {
     }
     else if (isArray(value)) {
         if (isArray(route[key])) {
-            (route[key] as any[]).push( ...value );
+            (route[key] as unknown[]).push( ...value );
         }
     }
 }
@@ -43,15 +43,15 @@ class Router {
 
 
     private add(radixkey: string, route: Route) {
-        let node = this.root.add(radixkey, route);
-
-        if (node.type === STATIC) {
+        if (radixkey.indexOf(':') === -1 || this.root.add(radixkey, route).type === STATIC) {
             if (this.static[radixkey]) {
                 throw new Error(`Routing: static path '${radixkey}' is already in use`);
             }
 
             this.static[radixkey] = route;
         }
+
+        return this;
     }
 
     private route({ middleware, name, path, responder, subdomain }: Options) {
@@ -106,10 +106,8 @@ class Router {
     match(method: string, path: string, subdomain?: string | null): ReturnType<Node['find']> {
         let key = radixkey(path, { method, subdomain });
 
-        if (this.static[key]) {
-            return {
-                route: this.static[key]
-            };
+        if (key in this.static) {
+            return { route: this.static[key] };
         }
 
         return this.root.find(key);
@@ -155,6 +153,8 @@ class Router {
                 this.subdomains.push(route.subdomain);
             }
         }
+
+        return this;
     }
 
     post(options: Options) {
@@ -168,7 +168,7 @@ class Router {
     }
 
     uri(name: string, values: unknown[] = []) {
-        let path = this.routes?.[name]?.path;
+        let path = this.routes[name]?.path;
 
         if (!path) {
             throw new Error(`Routing: route name '${name}' does not exist or it does not provide a path`);
