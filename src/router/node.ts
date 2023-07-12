@@ -1,4 +1,4 @@
-import { PLACEHOLDER, STATIC, WILDCARD } from "~/constants";
+import { PLACEHOLDER, STATIC, WILDCARD } from '~/constants';
 import { Route } from './index';
 
 

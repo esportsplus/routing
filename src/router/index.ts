@@ -1,4 +1,4 @@
-import { STATIC } from "~/constants";
+import { STATIC } from '~/constants';
 import { Options } from '~/types';
 import { Node } from './node';
 import { normalize, radixkey } from './path';
