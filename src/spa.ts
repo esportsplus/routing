@@ -16,7 +16,7 @@ function update() {
             values: Request = factory();
 
         for (let key in values) {
-            // @ts-ignore STFU
+            // @ts-ignore
             state[key] = values[key];
         }
     }
