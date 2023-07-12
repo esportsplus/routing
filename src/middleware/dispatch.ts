@@ -1,7 +1,7 @@
-import { Middleware, Request, Router } from '~/types';
+import { Middleware, Request } from '~/types';
 
 
-export default <R>(request: { data: ReturnType<Router['match']> }) => {
+export default <R>(request: Request) => {
     let { route } = request.data;
 
     if (!route) {
