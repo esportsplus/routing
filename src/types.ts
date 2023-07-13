@@ -1,8 +1,8 @@
-import { Middleware as M, Next as N } from '@esportsplus/middleware';
+import { Next as N, Stage } from '@esportsplus/pipeline';
 import { Route, Router } from './router';
 
 
-type Middleware<R> = M<Request, Response<R>>;
+type Middleware<R> = Stage<Request, Response<R>>;
 
 type Next<R> = N<Request, Response<R>>;
 

@@ -1,6 +1,7 @@
 import { reactive } from '@esportsplus/reactivity';
 import { Middleware, Request, Response, Router } from './types';
-import middleware from '@esportsplus/middleware';
+import pipeline from '@esportsplus/pipeline';
+import factory from './router';
 
 
 let cache: Request[] = [],
@@ -23,6 +24,19 @@ function normalize(uri: string) {
     return uri;
 }
 
+function onpopstate() {
+    let values = request();
+
+    for (let i = 0, n = cache.length; i < n; i++) {
+        let state = cache[i];
+
+        for (let key in state) {
+            // @ts-ignore
+            state[key] = values[key];
+        }
+    }
+}
+
 function request(): Request {
     let { hash, hostname, href, origin, port, protocol } = new URL( window.location?.href || '' ),
         path = hash ? hash.slice(1).split('?') : ['/', ''];
@@ -36,41 +50,29 @@ function request(): Request {
         path: path[0],
         port,
         protocol,
-        query: path[1] ? Object.fromEntries( (new URLSearchParams(path[1])).entries() ) : {}
+        query: path[1] ? Object.fromEntries( (new URLSearchParams(path[1])).entries() ) : {},
     };
 }
 
-function event() {
-    let values = request();
 
-    for (let i = 0, n = cache.length; i < n; i++) {
-        let state = cache[i];
-
-        for (let key in values) {
-            // @ts-ignore
-            state[key] = values[key];
-        }
-    }
-}
-
-
-export default <R>(router: Router<R>) => {
-    let state = reactive( request() );
+export default <R>(instance?: Router<R>) => {
+    let router = instance || factory<R>(),
+        state = reactive( request() );
 
     cache.push(state);
 
     if (!registered) {
         registered = true;
-        window.addEventListener('popstate', event);
+        window.addEventListener('popstate', onpopstate);
     }
 
     return {
         back,
         forward,
         middleware: (...fns: Middleware<R>[]) => {
-            let pipeline = middleware<Request, Response<R>>(...fns);
+            let instance = pipeline<Request, Response<R>>(...fns);
 
-            return () => pipeline(state);
+            return () => instance(state);
         },
         redirect: (path: string, { state, values }: { state?: Record<PropertyKey, unknown>; values?: unknown[] }) => {
             if (path.startsWith('https://') || path.startsWith('http://')) {
@@ -79,6 +81,7 @@ export default <R>(router: Router<R>) => {
 
             window.history.pushState( (state || {}), '', normalize(router.uri(path, values || [])) );
         },
+        router,
         uri: (path: string, values: unknown[] = []) => {
             return normalize( router.uri(path, values || []) );
         }

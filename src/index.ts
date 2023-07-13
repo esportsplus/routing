@@ -1,8 +1,7 @@
-import middleware from './middleware';
+import browser from './browser';
 import router from './router';
 import slugify from './slugify';
-import spa from './spa';
 
 
-export { middleware, router, slugify, spa };
+export { browser, router, slugify };
 export * from './types';

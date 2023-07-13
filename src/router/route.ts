@@ -1,5 +1,5 @@
 import { Middleware, Next, Responder } from '~/types';
-import middleware from '@esportsplus/middleware';
+import pipeline from '@esportsplus/pipeline';
 
 
 class Route<R> {
@@ -22,7 +22,7 @@ class Route<R> {
                 this.dispatch = (request) => this.responder(request);
             }
             else {
-                this.dispatch = middleware(...this.stack, (request => this.responder(request)));
+                this.dispatch = pipeline(...this.stack, (request => this.responder(request)));
             }
         }
 
