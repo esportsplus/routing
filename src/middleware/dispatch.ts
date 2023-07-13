@@ -1,10 +1,11 @@
-import { Request, Responder } from '~/types';
+import { Request } from '~/types';
+import { Router } from '~/router';
 
 
-export default <R>(request: Request<R>): ReturnType<Responder<R>> => {
+export default <R>(request: Request & { data: ReturnType<Router<R>['match']> }) => {
     let { route } = request.data;
 
-    if (!route) {
+    if (route === undefined) {
         throw new Error(`Routing: route dispatching failed, route is undefined!`);
     }
 
