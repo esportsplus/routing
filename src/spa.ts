@@ -1,9 +1,6 @@
 import { Request, Router } from './types';
 
 
-let state = request();
-
-
 function back() {
     window.history.back();
 }
@@ -37,18 +34,18 @@ function request<R>(): Request<R> {
     };
 }
 
-function update() {
-    let values = request();
-
-    for (let key in values) {
-        // @ts-ignore
-        state[key] = values[key];
-    }
-}
-
 
 export default <R>(router: Router<R>) => {
-    window.addEventListener('popstate', update);
+    let state = request<R>();
+
+    window.addEventListener('popstate', () => {
+        let values = request<R>();
+
+        for (let key in values) {
+            // @ts-ignore
+            state[key] = values[key];
+        }
+    });
 
     return {
         back,
