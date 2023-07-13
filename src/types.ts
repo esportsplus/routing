@@ -1,17 +1,21 @@
-import { Middleware, Next } from '@esportsplus/middleware';
+import { Middleware as M, Next as N } from '@esportsplus/middleware';
 import { Route, Router } from './router';
 
 
-type Options = {
-    middleware?: Middleware<Request, unknown>[];
+type Middleware<R> = M<Request<R>, ReturnType<Responder<R>>>;
+
+type Next<R> = N<Request<R>, ReturnType<Responder<R>>>;
+
+type Options<R> = {
+    middleware?: Middleware<R>[];
     name?: string;
     path?: string;
-    responder: Responder;
+    responder: Responder<R>;
     subdomain?: string;
 };
 
-type Request = {
-    data: ReturnType<Router['match']> & Record<PropertyKey, unknown>;
+type Request<R> = {
+    data: ReturnType<Router<R>['match']> & Record<PropertyKey, unknown>;
     href: string;
     hostname: string;
     method: string;
@@ -23,7 +27,7 @@ type Request = {
     subdomain?: string;
 };
 
-type Responder = <T, U>(request: T) => Promise<U> | U;
+type Responder<R> = (request: Request<R>) => Promise<R> | R;
 
 
 export { Middleware, Next, Options, Request, Responder, Route, Router };

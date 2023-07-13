@@ -1,17 +1,27 @@
 import { Request, Router } from './types';
 
 
-type Cache<T = Record<string, unknown>> = {
-    factory: () => T;
-    state: T;
-};
+let state = request();
 
 
-let cache: Cache[] = [];
+function back() {
+    window.history.back();
+}
 
+function forward() {
+    window.history.forward();
+}
 
-function request(url: string = window?.location?.href || ''): Request {
-    let { hash, hostname, href, origin, port, protocol } = new URL( url ),
+function normalize(uri: string) {
+    if (uri[0] === '/') {
+        return '#' + uri;
+    }
+
+    return uri;
+}
+
+function request<R>(): Request<R> {
+    let { hash, hostname, href, origin, port, protocol } = new URL( window?.location?.href || '' ),
         path = hash?.replace('#/', '/')?.split('?') || ['/', ''];
 
     return {
@@ -28,59 +38,31 @@ function request(url: string = window?.location?.href || ''): Request {
 }
 
 function update() {
-    for (let i = 0, n = cache.length; i < n; i++) {
-        let { factory, state } = cache[i],
-            values = factory();
+    let values = request();
 
-        for (let key in values) {
-            state[key] = values[key];
-        }
+    for (let key in values) {
+        // @ts-ignore
+        state[key] = values[key];
     }
 }
 
 
-const back = () => window.history.back();
-
-const forward = () => window.history.forward();
-
-
-export default (router: Router, fn: Cache['factory'] = request) => {
-    let state = {} as ReturnType< typeof fn >;
-
-    cache.push({
-        factory: fn,
-        state
-    });
-
-    update();
-
+export default <R>(router: Router<R>) => {
     window.addEventListener('popstate', update);
 
     return {
         back,
         forward,
         redirect: (path: string, { state, values }: { state?: Record<PropertyKey, unknown>; values?: unknown[] }) => {
-            if (path.startsWith('http://') || path.startsWith('https://')) {
+            if (path.startsWith('https://') || path.startsWith('http://')) {
                 return window.location.replace(path);
             }
 
-            let uri = router.uri(path, values || []);
-
-            if (uri[0] === '/') {
-                uri = '#' + uri;
-            }
-
-            window.history.pushState(state || {}, '', uri);
+            window.history.pushState( (state || {}), '', normalize(router.uri(path, values || [])) );
         },
         request: state,
         uri: (path: string, values: unknown[] = []) => {
-            let uri = router.uri(path, values || []);
-
-            if (uri[0] === '/') {
-                uri = '#' + uri;
-            }
-
-            return uri;
+            return normalize( router.uri(path, values || []) );
         }
     };
 };

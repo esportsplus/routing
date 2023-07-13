@@ -2,28 +2,28 @@ import { PLACEHOLDER, STATIC, WILDCARD } from '~/constants';
 import { Route } from './index';
 
 
-class Node {
-    children: Map<string | number, Node> | null = null;
-    parent: Node | null = null;
+class Node<R> {
+    children: Map<string | number, Node<R>> | null = null;
+    parent: Node<R> | null = null;
     path: string | null = null;
     property: string | null = null;
-    route: Route | null = null;
+    route: Route<R> | null = null;
     type: number | null = null;
 
 
-    constructor(parent: Node['parent'] = null) {
+    constructor(parent: Node<R>['parent'] = null) {
         this.parent = parent;
     }
 
 
-    add(path: string, route: Route) {
-        let node: Node | undefined = this,
+    add(path: string, route: Route<R>) {
+        let node: Node<R> | undefined = this,
             segments = path.split('/'),
-            type: Node['type'] = STATIC,
+            type: Node<R>['type'] = STATIC,
             unnamed = 0;
 
         for (let i = 0, n = segments.length; i < n; i++) {
-            let child: Node | undefined = node.children?.get(segments[i]);
+            let child: Node<R> | undefined = node.children?.get(segments[i]);
 
             if (!child) {
                 let segment = segments[i],
@@ -33,17 +33,17 @@ class Node {
                     node.children = new Map();
                 }
 
-                node.children.set(segment, (child = new Node(node)));
+                node.children.set(segment, (child = new Node<R>(node)));
 
                 // Named property
                 if (symbol === ':') {
-                    child.property = segment.slice(1) || `${unnamed++}`;
+                    child.property = (segment.slice(1) || unnamed++).toString();
                     node.children.set(PLACEHOLDER, child);
                     type = null;
                 }
                 // "*:" Wildcard property
                 else if (symbol === '*') {
-                    child.property = segment.slice(2) || `${unnamed++}`;
+                    child.property = (segment.slice(2) || unnamed++).toString();
                     node.children.set(WILDCARD, child);
                     type = null;
                 }
@@ -61,12 +61,12 @@ class Node {
 
     find(path: string): {
         parameters?: Record<PropertyKey, unknown>;
-        route?: Route;
+        route?: Route<R>;
     } {
-        let node: Node | undefined = this,
+        let node: Node<R> | undefined = this,
             parameters: Record<PropertyKey, unknown> = {},
             segments = path.split('/'),
-            wildcard: { node: Node, value: string } | null = null;
+            wildcard: { node: Node<R>, value: string } | null = null;
 
         for (let i = 0, n = segments.length; i < n; i++) {
             let segment = segments[i],
@@ -80,7 +80,7 @@ class Node {
             }
 
             // Exact matches take precedence over placeholders
-            let next: Node | undefined = node.children?.get(segment);
+            let next: Node<R> | undefined = node.children?.get(segment);
 
             if (next) {
                 node = next;
@@ -112,7 +112,7 @@ class Node {
     }
 
     remove(path: string) {
-        let node: Node | undefined = this,
+        let node: Node<R> | undefined = this,
             segments = path.split('/');
 
         for (let i = 0, n = segments.length; i < n; i++) {
@@ -123,17 +123,17 @@ class Node {
             }
         }
 
-        if (!node?.children?.size) {
-            let parent = node.parent;
-
-            if (parent && parent.children) {
-                parent.children.delete( segments[segments.length - 1] );
-                parent.children.delete(WILDCARD);
-                parent.children.delete(PLACEHOLDER);
-            }
+        if (node.children?.size) {
+            return;
         }
 
-        return node;
+        let parent = node.parent;
+
+        if (parent && parent.children) {
+            parent.children.delete( segments[segments.length - 1] );
+            parent.children.delete(WILDCARD);
+            parent.children.delete(PLACEHOLDER);
+        }
     }
 }
 

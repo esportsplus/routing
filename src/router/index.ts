@@ -1,14 +1,29 @@
 import { STATIC } from '~/constants';
 import { Options } from '~/types';
 import { Node } from './node';
-import { normalize, radixkey } from './path';
 import { Route } from './route';
 
 
 let { isArray } = Array;
 
 
-function set(route: Route, key: keyof Route, value?: unknown) {
+function normalize(path: string) {
+    if (path[0] !== '/') {
+        path = '/' + path;
+    }
+
+    if (path[path.length - 1] === '/') {
+        path = path.slice(0, -1);
+    }
+
+    return path || '/';
+}
+
+function radixkey(method: string, path: string, subdomain?: string | null) {
+    return ((subdomain ? subdomain + ' ' : '') + method).toUpperCase() + ' ' + normalize(path);
+}
+
+function set<R>(route: Route<R>, key: keyof Route<R>, value?: unknown) {
     if (!value) {
         return;
     }
@@ -29,11 +44,11 @@ function set(route: Route, key: keyof Route, value?: unknown) {
 }
 
 
-class Router {
-    groups: Omit<Options, 'responder'>[] = [];
-    root: Node;
-    routes: Record<string, Route> = {};
-    static: Record<string, Route> = {};
+class Router<R> {
+    groups: Omit<Options<R>, 'responder'>[] = [];
+    root: Node<R>;
+    routes: Record<string, Route<R>> = {};
+    static: Record<string, Route<R>> = {};
     subdomains: string[] | null = null;
 
 
@@ -42,7 +57,7 @@ class Router {
     }
 
 
-    private add(radixkey: string, route: Route) {
+    private add(radixkey: string, route: Route<R>) {
         if (radixkey.indexOf(':') === -1 || this.root.add(radixkey, route).type === STATIC) {
             if (this.static[radixkey]) {
                 throw new Error(`Routing: static path '${radixkey}' is already in use`);
@@ -54,7 +69,7 @@ class Router {
         return this;
     }
 
-    private route({ middleware, name, path, responder, subdomain }: Options) {
+    private route({ middleware, name, path, responder, subdomain }: Options<R>) {
         let route = new Route(responder);
 
         for (let i = 0, n = this.groups.length; i < n; i++) {
@@ -83,19 +98,19 @@ class Router {
     }
 
 
-    delete(options: Options) {
+    delete(options: Options<R>) {
         this.on(['DELETE'], options);
         return this;
     }
 
-    get(options: Options) {
+    get(options: Options<R>) {
         this.on(['GET'], options);
         return this;
     }
 
-    group(options: Router['groups'][0]) {
+    group(options: Router<R>['groups'][0]) {
         return {
-            routes: (fn: (router: Router) => void) => {
+            routes: (fn: (router: Router<R>) => void) => {
                 this.groups.push(options);
                 fn(this);
                 this.groups.pop();
@@ -103,17 +118,19 @@ class Router {
         }
     }
 
-    match(method: string, path: string, subdomain?: string | null): ReturnType<Node['find']> {
-        let key = radixkey(path, { method, subdomain });
+    match(method: string, path: string, subdomain?: string | null): ReturnType<Node<R>['find']> {
+        let key = radixkey(method, path, subdomain);
 
         if (key in this.static) {
-            return { route: this.static[key] };
+            return {
+                route: this.static[key]
+            };
         }
 
         return this.root.find(key);
     }
 
-    on(methods: string[], options: Options) {
+    on(methods: string[], options: Options<R>) {
         let route = this.route(options);
 
         if (route.name) {
@@ -126,10 +143,7 @@ class Router {
 
         if (route.path) {
             for (let i = 0, n = methods.length; i < n; i++) {
-                let key = radixkey(route.path, {
-                        method: methods[i],
-                        subdomain: route.subdomain
-                    });
+                let key = radixkey(methods[i], route.path, route.subdomain);
 
                 if (key.indexOf('?:') !== -1) {
                     let segments = key.split('?:'),
@@ -157,12 +171,12 @@ class Router {
         return this;
     }
 
-    post(options: Options) {
+    post(options: Options<R>) {
         this.on(['POST'], options);
         return this;
     }
 
-    put(options: Options) {
+    put(options: Options<R>) {
         this.on(['PUT'], options);
         return this;
     }
@@ -205,5 +219,5 @@ class Router {
 }
 
 
-export default () => new Router();
+export default <R>() => new Router<R>();
 export { Router, Route };

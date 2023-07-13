@@ -1,25 +1,25 @@
-import { Middleware, Responder } from '~/types';
+import { Middleware, Next, Responder } from '~/types';
 import { factory } from '~/middleware';
 
 
-class Route {
-    dispatch: ReturnType<typeof factory> | null = null;
+class Route<R> {
+    dispatch: Next<R> | null = null;
     name: string | null = null;
     path: string | null = null;
-    responder: Responder;
-    stack: Middleware<unknown, unknown>[] | null = null;
+    responder: Responder<R>;
+    stack: Middleware<R>[] | null = null;
     subdomain: string | null = null;
 
 
-    constructor(responder: Responder) {
+    constructor(responder: Responder<R>) {
         this.responder = responder;
     }
 
 
     get dispatcher() {
         if (this.dispatch === null) {
-            if (!this.stack?.length) {
-                this.dispatch = <T>(request: T) => this.responder(request);
+            if (this.stack === null) {
+                this.dispatch = (request) => this.responder(request);
             }
             else {
                 this.dispatch = factory(...this.stack, (request => this.responder(request)));

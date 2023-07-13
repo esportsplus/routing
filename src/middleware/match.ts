@@ -1,28 +1,28 @@
-import { Middleware, Request, Router } from '~/types';
+import { Middleware, Router } from '~/types';
 
 
-export default <R>(router: Router, { spa }: { spa?: boolean } = {}): Middleware<Request, R> => {
-    let subdomain: string | null = null;
-
+export default <R>(router: Router<R>, subdomain?: string): Middleware<R> => {
     return (request, next) => {
-        if ((typeof request.subdomain !== 'string' && !spa) || subdomain === null) {
+        let match = subdomain || request.subdomain;
+
+        if (match === undefined) {
             if (router.subdomains) {
                 for (let i = 0, n = router.subdomains.length; i < n; i++) {
                     if (!request.hostname.startsWith(router.subdomains[i])) {
                         continue;
                     }
 
-                    subdomain = router.subdomains[i];
+                    match = router.subdomains[i];
                     break;
                 }
             }
 
-            if (subdomain === null) {
-                subdomain = '';
+            if (match === undefined) {
+                match = '';
             }
         }
 
-        let { parameters, route } = router.match(request.method, request.path, request.subdomain || subdomain);
+        let { parameters, route } = router.match(request.method, request.path, match);
 
         request.data.parameters = parameters;
         request.data.route = route;
