@@ -69,8 +69,8 @@ export default <R>(instance?: Router<R>) => {
     return {
         back,
         forward,
-        middleware: (...fns: Middleware<R>[]) => {
-            let instance = pipeline<Request, Response<R>>(...fns);
+        middleware: (...middleware: Middleware<R>[]) => {
+            let instance = pipeline<Request, Response<R>>(...middleware);
 
             return () => instance(state);
         },
