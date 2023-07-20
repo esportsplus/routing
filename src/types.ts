@@ -1,10 +1,11 @@
+import { Prettify } from '@esportsplus/typescript';
 import { Next as N, Stage } from '@esportsplus/pipeline';
 import { Route, Router } from './router';
 
 
-type Middleware<T> = Stage<Request<T>, Response<T>>;
+type Middleware<T> = Stage<Request<T>, T>;
 
-type Next<T> = N<Request<T>, Response<T>>;
+type Next<T> = N<Request<T>, T>;
 
 type Options<T> = {
     middleware?: Middleware<T>[];
@@ -15,7 +16,7 @@ type Options<T> = {
 };
 
 type Request<T> = {
-    data: Record<PropertyKey, unknown> & ReturnType<Router<T>['match']>;
+    data: Prettify<Record<PropertyKey, unknown> & ReturnType<Router<T>['match']>>;
     href: string;
     hostname: string;
     method: string;
@@ -27,9 +28,7 @@ type Request<T> = {
     subdomain?: string;
 };
 
-type Responder<T> = (request: Request<T>) => Response<T>;
-
-type Response<T> = T;
+type Responder<T> = (request: Request<T>) => T;
 
 
-export { Middleware, Next, Options, Request, Responder, Response, Route, Router };
+export { Middleware, Next, Options, Request, Responder, Route, Router };

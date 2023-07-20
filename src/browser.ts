@@ -1,5 +1,5 @@
 import { reactive } from '@esportsplus/reactivity';
-import { Middleware, Request, Response, Router } from './types';
+import { Middleware, Request, Router } from './types';
 import pipeline from '@esportsplus/pipeline';
 import factory from './router';
 
@@ -70,7 +70,7 @@ export default <T>(instance?: Router<T>) => {
         back,
         forward,
         middleware: (...middleware: Middleware<T>[]) => {
-            let instance = pipeline<Request<T>, Response<T>>(...middleware);
+            let instance = pipeline(...middleware);
 
             return {
                 pipeline: () => instance(state),
