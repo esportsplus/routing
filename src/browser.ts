@@ -30,7 +30,7 @@ function onpopstate() {
     for (let i = 0, n = cache.length; i < n; i++) {
         let state = cache[i];
 
-        for (let key in state) {
+        for (let key in values) {
             // @ts-ignore
             state[key] = values[key];
         }
@@ -63,7 +63,7 @@ export default <T>(instance?: Router<T>) => {
 
     if (!registered) {
         registered = true;
-        window.addEventListener('popstate', onpopstate);
+        window.addEventListener('hashchange', onpopstate);
     }
 
     return {
@@ -72,18 +72,21 @@ export default <T>(instance?: Router<T>) => {
         middleware: (...middleware: Middleware<T>[]) => {
             let instance = pipeline<Request<T>, Response<T>>(...middleware);
 
-            return () => instance(state);
+            return {
+                pipeline: () => instance(state),
+                request: state
+            };
         },
-        redirect: (path: string, { state, values }: { state?: Record<PropertyKey, unknown>; values?: unknown[] }) => {
+        redirect: (path: string, values: unknown[] = []) => {
             if (path.startsWith('https://') || path.startsWith('http://')) {
                 return window.location.replace(path);
             }
 
-            window.history.pushState( (state || {}), '', normalize(router.uri(path, values || [])) );
+            window.location.hash = normalize( router.uri(path, values) );
         },
         router,
         uri: (path: string, values: unknown[] = []) => {
-            return normalize( router.uri(path, values || []) );
+            return normalize( router.uri(path, values) );
         }
     };
 };

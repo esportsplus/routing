@@ -29,7 +29,7 @@ type Request<T> = {
 
 type Responder<T> = (request: Request<T>) => Response<T>;
 
-type Response<T> = Promise<T> | T;
+type Response<T> = T;
 
 
 export { Middleware, Next, Options, Request, Responder, Response, Route, Router };
