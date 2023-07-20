@@ -4,7 +4,7 @@ import pipeline from '@esportsplus/pipeline';
 import factory from './router';
 
 
-let cache: Request[] = [],
+let cache: Request<any>[] = [],
     registered = false;
 
 
@@ -37,7 +37,7 @@ function onpopstate() {
     }
 }
 
-function request(): Request {
+function request<T>(): Request<T> {
     let { hash, hostname, href, origin, port, protocol } = new URL( window.location?.href || '' ),
         path = hash ? hash.slice(1).split('?') : ['/', ''];
 
@@ -55,9 +55,9 @@ function request(): Request {
 }
 
 
-export default <R>(instance?: Router<R>) => {
-    let router = instance || factory<R>(),
-        state = reactive( request() );
+export default <T>(instance?: Router<T>) => {
+    let router = instance || factory<T>(),
+        state = reactive( request<T>() );
 
     cache.push(state);
 
@@ -69,8 +69,8 @@ export default <R>(instance?: Router<R>) => {
     return {
         back,
         forward,
-        middleware: (...middleware: Middleware<R>[]) => {
-            let instance = pipeline<Request, Response<R>>(...middleware);
+        middleware: (...middleware: Middleware<T>[]) => {
+            let instance = pipeline<Request<T>, Response<T>>(...middleware);
 
             return () => instance(state);
         },

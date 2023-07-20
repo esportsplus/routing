@@ -2,20 +2,20 @@ import { Next as N, Stage } from '@esportsplus/pipeline';
 import { Route, Router } from './router';
 
 
-type Middleware<R> = Stage<Request, Response<R>>;
+type Middleware<T> = Stage<Request<T>, Response<T>>;
 
-type Next<R> = N<Request, Response<R>>;
+type Next<T> = N<Request<T>, Response<T>>;
 
-type Options<R> = {
-    middleware?: Middleware<R>[];
+type Options<T> = {
+    middleware?: Middleware<T>[];
     name?: string;
     path?: string;
-    responder: Responder<R>;
+    responder: Responder<T>;
     subdomain?: string;
 };
 
-type Request = {
-    data: Record<PropertyKey, unknown>;
+type Request<T> = {
+    data: Record<PropertyKey, unknown> & ReturnType<Router<T>['match']>;
     href: string;
     hostname: string;
     method: string;
@@ -27,9 +27,9 @@ type Request = {
     subdomain?: string;
 };
 
-type Responder<R> = (request: Request) => Response<R>;
+type Responder<T> = (request: Request<T>) => Response<T>;
 
-type Response<R> = Promise<R> | R;
+type Response<T> = Promise<T> | T;
 
 
 export { Middleware, Next, Options, Request, Responder, Response, Route, Router };

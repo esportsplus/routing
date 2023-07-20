@@ -2,28 +2,28 @@ import { PLACEHOLDER, STATIC, WILDCARD } from '~/constants';
 import { Route } from './index';
 
 
-class Node<R> {
-    children: Map<string | number, Node<R>> | null = null;
-    parent: Node<R> | null = null;
+class Node<T> {
+    children: Map<string | number, Node<T>> | null = null;
+    parent: Node<T> | null = null;
     path: string | null = null;
     property: string | null = null;
-    route: Route<R> | null = null;
+    route: Route<T> | null = null;
     type: number | null = null;
 
 
-    constructor(parent: Node<R>['parent'] = null) {
+    constructor(parent: Node<T>['parent'] = null) {
         this.parent = parent;
     }
 
 
-    add(path: string, route: Route<R>) {
-        let node: Node<R> | undefined = this,
+    add(path: string, route: Route<T>) {
+        let node: Node<T> | undefined = this,
             segments = path.split('/'),
-            type: Node<R>['type'] = STATIC,
+            type: Node<T>['type'] = STATIC,
             unnamed = 0;
 
         for (let i = 0, n = segments.length; i < n; i++) {
-            let child: Node<R> | undefined = node.children?.get(segments[i]);
+            let child: Node<T> | undefined = node.children?.get(segments[i]);
 
             if (!child) {
                 let segment = segments[i],
@@ -33,7 +33,7 @@ class Node<R> {
                     node.children = new Map();
                 }
 
-                node.children.set(segment, (child = new Node<R>(node)));
+                node.children.set(segment, (child = new Node<T>(node)));
 
                 // Named property
                 if (symbol === ':') {
@@ -61,12 +61,12 @@ class Node<R> {
 
     find(path: string): {
         parameters?: Record<PropertyKey, unknown>;
-        route?: Route<R>;
+        route?: Route<T>;
     } {
-        let node: Node<R> | undefined = this,
+        let node: Node<T> | undefined = this,
             parameters: Record<PropertyKey, unknown> = {},
             segments = path.split('/'),
-            wildcard: { node: Node<R>, value: string } | null = null;
+            wildcard: { node: Node<T>, value: string } | null = null;
 
         for (let i = 0, n = segments.length; i < n; i++) {
             let segment = segments[i],
@@ -80,7 +80,7 @@ class Node<R> {
             }
 
             // Exact matches take precedence over placeholders
-            let next: Node<R> | undefined = node.children?.get(segment);
+            let next: Node<T> | undefined = node.children?.get(segment);
 
             if (next) {
                 node = next;
@@ -112,7 +112,7 @@ class Node<R> {
     }
 
     remove(path: string) {
-        let node: Node<R> | undefined = this,
+        let node: Node<T> | undefined = this,
             segments = path.split('/');
 
         for (let i = 0, n = segments.length; i < n; i++) {

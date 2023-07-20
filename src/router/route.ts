@@ -2,16 +2,16 @@ import { Middleware, Next, Responder } from '~/types';
 import pipeline from '@esportsplus/pipeline';
 
 
-class Route<R> {
-    dispatch: Next<R> | null = null;
+class Route<T> {
+    dispatch: Next<T> | null = null;
     name: string | null = null;
     path: string | null = null;
-    responder: Responder<R>;
-    stack: Middleware<R>[] | null = null;
+    responder: Responder<T>;
+    stack: Middleware<T>[] | null = null;
     subdomain: string | null = null;
 
 
-    constructor(responder: Responder<R>) {
+    constructor(responder: Responder<T>) {
         this.responder = responder;
     }
 
