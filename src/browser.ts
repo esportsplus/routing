@@ -102,7 +102,7 @@ export default <T>(instance?: Router<T>) => {
             return () => instance(state);
         },
         redirect: (path: string, values: unknown[] = []) => {
-            if (path.startsWith('https://') || path.startsWith('http://')) {
+            if (path.indexOf('://') !== -1) {
                 return window.location.replace(path);
             }
 
