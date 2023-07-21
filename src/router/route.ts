@@ -1,4 +1,4 @@
-import { Middleware, Request, Responder } from '~/types';
+import { Middleware, Next, Request } from '~/types';
 import pipeline from '@esportsplus/pipeline';
 
 
@@ -6,11 +6,11 @@ class Route<T> {
     middleware: Middleware<T>[] | null = null;
     name: string | null = null;
     path: string | null = null;
-    responder: Responder<T>;
+    responder: Next<T>;
     subdomain: string | null = null;
 
 
-    constructor(responder: Responder<T>) {
+    constructor(responder: Next<T>) {
         this.responder = responder;
     }
 
@@ -20,7 +20,7 @@ class Route<T> {
             return (request: Request<T>) => this.responder(request);
         }
 
-        return pipeline(...this.middleware, (request: Request<T>) => this.responder(request));
+        return pipeline(...this.middleware, (request) => this.responder(request));
     }
 }
 

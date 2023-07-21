@@ -2,15 +2,15 @@ import { Next as N, Stage } from '@esportsplus/pipeline';
 import { Route, Router } from './router';
 
 
-type Middleware<T> = Stage<Request<T>, Response<T>>;
+type Middleware<T> = Stage<Request<T>, T>;
 
-type Next<T> = N<Request<T>, Response<T>>;
+type Next<T> = N<Request<T>, T>;
 
 type Options<T> = {
     middleware?: Middleware<T>[];
     name?: string;
     path?: string;
-    responder: Responder<T>;
+    responder: Next<T>;
     subdomain?: string;
 };
 
@@ -27,9 +27,5 @@ type Request<T> = {
     subdomain?: string;
 };
 
-type Responder<T> = (request: Request<T>) => Response<T>;
 
-type Response<T> = Promise<T> | T;
-
-
-export { Middleware, Next, Options, Request, Responder, Route, Router };
+export { Middleware, Next, Options, Request, Route, Router };
