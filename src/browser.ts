@@ -69,13 +69,37 @@ export default <T>(instance?: Router<T>) => {
     return {
         back,
         forward,
+        match: (subdomain?: string) => {
+            let match = subdomain || state.subdomain;
+
+            if (match === undefined) {
+                if (router.subdomains) {
+                    for (let i = 0, n = router.subdomains.length; i < n; i++) {
+                        if (!state.hostname.startsWith(router.subdomains[i])) {
+                            continue;
+                        }
+
+                        match = router.subdomains[i];
+                        break;
+                    }
+                }
+
+                if (match === undefined) {
+                    match = '';
+                }
+            }
+
+            let { parameters, route } = router.match(state.method, state.path, match);
+
+            state.data.parameters = parameters;
+            state.data.route = route;
+
+            return state;
+        },
         middleware: (...middleware: Middleware<T>[]) => {
             let instance = pipeline(...middleware);
 
-            return {
-                pipeline: () => instance(state),
-                request: state
-            };
+            return () => instance(state);
         },
         redirect: (path: string, values: unknown[] = []) => {
             if (path.startsWith('https://') || path.startsWith('http://')) {

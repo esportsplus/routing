@@ -1,13 +1,12 @@
-import { Middleware, Next, Responder } from '~/types';
+import { Middleware, Request, Responder } from '~/types';
 import pipeline from '@esportsplus/pipeline';
 
 
 class Route<T> {
-    dispatch: Next<T> | null = null;
+    middleware: Middleware<T>[] | null = null;
     name: string | null = null;
     path: string | null = null;
     responder: Responder<T>;
-    stack: Middleware<T>[] | null = null;
     subdomain: string | null = null;
 
 
@@ -16,17 +15,12 @@ class Route<T> {
     }
 
 
-    get dispatcher() {
-        if (this.dispatch === null) {
-            if (this.stack === null) {
-                this.dispatch = (request) => this.responder(request);
-            }
-            else {
-                this.dispatch = pipeline(...this.stack, (request => this.responder(request)));
-            }
+    get dispatch() {
+        if (this.middleware === null) {
+            return (request: Request<T>) => this.responder(request);
         }
 
-        return this.dispatch;
+        return pipeline(...this.middleware, (request: Request<T>) => this.responder(request));
     }
 }
 

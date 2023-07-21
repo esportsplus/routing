@@ -76,14 +76,14 @@ class Router<T> {
             let { middleware, name, path, subdomain } = this.groups[i];
 
             set(route, 'name', name);
+            set(route, 'middleware', middleware);
             set(route, 'path', path);
-            set(route, 'stack', middleware);
             set(route, 'subdomain', subdomain);
         }
 
         set(route, 'name', name);
+        set(route, 'middleware', middleware);
         set(route, 'path', path);
-        set(route, 'stack', middleware);
         set(route, 'subdomain', subdomain);
 
         if (route.path) {
@@ -99,13 +99,11 @@ class Router<T> {
 
 
     delete(options: Options<T>) {
-        this.on(['DELETE'], options);
-        return this;
+        return this.on(['DELETE'], options);
     }
 
     get(options: Options<T>) {
-        this.on(['GET'], options);
-        return this;
+        return this.on(['GET'], options);
     }
 
     group(options: Router<T>['groups'][0]) {
@@ -172,13 +170,11 @@ class Router<T> {
     }
 
     post(options: Options<T>) {
-        this.on(['POST'], options);
-        return this;
+        return this.on(['POST'], options);
     }
 
     put(options: Options<T>) {
-        this.on(['PUT'], options);
-        return this;
+        return this.on(['PUT'], options);
     }
 
     uri(name: string, values: unknown[] = []) {
