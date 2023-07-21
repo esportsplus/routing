@@ -89,17 +89,17 @@ export default <T>(instance?: Router<T>) => {
                 }
             }
 
-            let { parameters, route } = router.match(state.method, state.path, match);
-
-            state.data.parameters = parameters;
-            state.data.route = route;
-
-            return state;
+            return router.match(state.method, state.path, match);
         },
         middleware: (...middleware: Middleware<T>[]) => {
             let instance = pipeline(...middleware);
 
-            return () => instance(state);
+            return ({ parameters, route }: ReturnType<typeof router.match>) => {
+                state.data.parameters = parameters;
+                state.data.route = route;
+
+                return instance(state);
+            };
         },
         redirect: (path: string, values: unknown[] = []) => {
             if (path.indexOf('://') !== -1) {
