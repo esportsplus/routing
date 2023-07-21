@@ -15,12 +15,12 @@ class Route<T> {
     }
 
 
-    get dispatch() {
+    dispatch(request: Request<T>) {
         if (this.middleware === null) {
-            return (request: Request<T>) => this.responder(request);
+            return this.responder(request);
         }
 
-        return pipeline(...this.middleware, (request) => this.responder(request));
+        return pipeline(...this.middleware, (request) => this.responder(request))(request);
     }
 }
 
