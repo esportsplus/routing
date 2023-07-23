@@ -1,11 +1,10 @@
-import { reactive } from '@esportsplus/reactivity';
+import { effect, reactive } from '@esportsplus/reactivity';
 import { Middleware, Request, Router } from './types';
 import pipeline from '@esportsplus/pipeline';
 import factory from './router';
 
 
-let cache: Request<any>[] = [],
-    registered = false;
+let cache: Request<any>[] = [];
 
 
 function back() {
@@ -16,28 +15,7 @@ function forward() {
     window.history.forward();
 }
 
-function normalize(uri: string) {
-    if (uri[0] === '/') {
-        return '#' + uri;
-    }
-
-    return uri;
-}
-
-function onpopstate() {
-    let values = request();
-
-    for (let i = 0, n = cache.length; i < n; i++) {
-        let state = cache[i];
-
-        for (let key in values) {
-            // @ts-ignore
-            state[key] = values[key];
-        }
-    }
-}
-
-function request<T>(): Request<T> {
+function href<T>(): Request<T> {
     let { hash, hostname, href, origin, port, protocol } = new URL( window.location?.href || '' ),
         path = hash ? hash.slice(1).split('?') : ['/', ''];
 
@@ -54,52 +32,75 @@ function request<T>(): Request<T> {
     };
 }
 
+function normalize(uri: string) {
+    if (uri[0] === '/') {
+        return '#' + uri;
+    }
+
+    return uri;
+}
+
+function onpopstate() {
+    let values = href();
+
+    for (let i = 0, n = cache.length; i < n; i++) {
+        let state = cache[i];
+
+        for (let key in values) {
+            // @ts-ignore
+            state[key] = values[key];
+        }
+    }
+}
+
 
 export default <T>(instance?: Router<T>) => {
-    let router = instance || factory<T>(),
-        state = reactive( request<T>() );
+    let request = reactive( href<T>() ),
+        router = instance || factory<T>();
 
-    cache.push(state);
-
-    if (!registered) {
-        registered = true;
+    if (cache.push(request) === 1) {
         window.addEventListener('hashchange', onpopstate);
     }
+
+    function match(subdomain?: string) {
+        if (router.subdomains !== null) {
+            for (let i = 0, n = router.subdomains.length; i < n; i++) {
+                if (!request.hostname.startsWith(router.subdomains[i])) {
+                    continue;
+                }
+
+                subdomain = router.subdomains[i];
+                break;
+            }
+        }
+
+        return router.match(request.method, request.path, subdomain || '');
+    }
+
+    match.reactive = (subdomain?: string) => {
+        let state = reactive<ReturnType<typeof router.match>>({
+                parameters: undefined,
+                route: undefined
+            });
+
+        effect(() => {
+            let { parameters, route } = match(subdomain);
+
+            state.parameters = parameters;
+            state.route = route;
+        });
+
+        return state;
+    };
 
     return {
         back,
         forward,
-        match: (subdomain?: string) => {
-            let match = subdomain || state.subdomain;
-
-            if (match === undefined) {
-                if (router.subdomains) {
-                    for (let i = 0, n = router.subdomains.length; i < n; i++) {
-                        if (!state.hostname.startsWith(router.subdomains[i])) {
-                            continue;
-                        }
-
-                        match = router.subdomains[i];
-                        break;
-                    }
-                }
-
-                if (match === undefined) {
-                    match = '';
-                }
-            }
-
-            return router.match(state.method, state.path, match);
-        },
+        match,
         middleware: (...middleware: Middleware<T>[]) => {
             let instance = pipeline(...middleware);
 
-            return ({ parameters, route }: ReturnType<typeof router.match>) => {
-                state.data.parameters = parameters;
-                state.data.route = route;
-
-                return instance(state);
-            };
+            return () => instance(request);
         },
         redirect: (path: string, values: unknown[] = []) => {
             if (path.indexOf('://') !== -1) {
