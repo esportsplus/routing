@@ -1,5 +1,6 @@
-import { effect, reactive } from '@esportsplus/reactivity';
-import { Middleware, Request, Router } from './types';
+import { effect, reactive, root } from '@esportsplus/reactivity';
+import { html } from '@esportsplus/template';
+import { Middleware, Next, Request, Router } from './types';
 import pipeline from '@esportsplus/pipeline';
 import factory from './router';
 
@@ -77,7 +78,7 @@ export default <T>(instance?: Router<T>) => {
         return router.match(request.method, request.path, subdomain || '');
     }
 
-    match.reactive = (subdomain?: string) => {
+    match.middleware = (subdomain?: string) => {
         let state = reactive<ReturnType<typeof router.match>>({
                 parameters: undefined,
                 route: undefined
@@ -90,7 +91,20 @@ export default <T>(instance?: Router<T>) => {
             state.route = route;
         });
 
-        return state;
+        return (request: Request<T>, next: Next<T>) => {
+            return html`${() => {
+                if (state.route === undefined) {
+                    throw new Error(`Routing: route is undefined!`);
+                }
+
+                return root(() => {
+                    request.data.parameters = state.parameters;
+                    request.data.route = state.route;
+
+                    return next(request);
+                });
+            }}`;
+        };
     };
 
     return {
