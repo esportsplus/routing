@@ -1,6 +1,6 @@
 import { effect, reactive, root, Scheduler } from '@esportsplus/reactivity';
 import { html } from '@esportsplus/template';
-import { Middleware, Next, NeverAsync, Request, Route, Router } from './types';
+import { Middleware, Next, Request, Route, Router } from './types';
 import pipeline from '@esportsplus/pipeline';
 import factory from './router';
 
@@ -55,7 +55,7 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
         return () => instance(request);
     };
 
-    host.dispatch = (request: Request<T>): NeverAsync<T> => {
+    host.dispatch = (request: Request<T>) => {
         let { route } = request.data;
 
         if (route === undefined) {
@@ -88,6 +88,7 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
                     throw new Error('Routing: route is undefined');
                 }
 
+                // @ts-ignore
                 return root(() => {
                     request.data.parameters = state.parameters;
                     request.data.route = state.route;
