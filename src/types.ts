@@ -1,10 +1,11 @@
+import { NeverAsync } from '@esportsplus/typescript';
 import { Next as N, Stage } from '@esportsplus/pipeline';
 import { Route, Router } from './router';
 
 
-type Middleware<T> = Stage<Request<T>, T>;
+type Middleware<T> = Stage<Request<T>, NeverAsync<T>>;
 
-type Next<T> = N<Request<T>, T>;
+type Next<T> = N<Request<T>, NeverAsync<T>>;
 
 type Options<T> = {
     middleware?: Middleware<T>[];
@@ -28,4 +29,4 @@ type Request<T> = {
 };
 
 
-export { Middleware, Next, Options, Request, Route, Router };
+export { Middleware, Next, NeverAsync, Options, Request, Route, Router };

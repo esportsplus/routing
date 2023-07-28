@@ -1,4 +1,4 @@
-import { Middleware, Next, Request } from '~/types';
+import { Middleware, Next, NeverAsync, Request } from '~/types';
 import pipeline from '@esportsplus/pipeline';
 
 
@@ -15,7 +15,7 @@ class Route<T> {
     }
 
 
-    dispatch(request: Request<T>) {
+    dispatch(request: Request<T>): NeverAsync<T> {
         if (this.middleware === null) {
             return this.responder(request);
         }

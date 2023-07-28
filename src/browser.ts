@@ -1,6 +1,6 @@
-import { effect, reactive, root } from '@esportsplus/reactivity';
+import { effect, reactive, root, Scheduler } from '@esportsplus/reactivity';
 import { html } from '@esportsplus/template';
-import { Middleware, Next, Request, Router } from './types';
+import { Middleware, Next, Request, Route, Router } from './types';
 import pipeline from '@esportsplus/pipeline';
 import factory from './router';
 
@@ -30,6 +30,72 @@ function href<T>(): Request<T> {
         port,
         protocol,
         query: path[1] ? Object.fromEntries( (new URLSearchParams(path[1])).entries() ) : {},
+    };
+}
+
+function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
+    if (router.subdomains !== null) {
+        for (let i = 0, n = router.subdomains.length; i < n; i++) {
+            if (!request.hostname.startsWith(router.subdomains[i])) {
+                continue;
+            }
+
+            subdomain = router.subdomains[i];
+            break;
+        }
+    }
+
+    return router.match(request.method, request.path, subdomain || '');
+}
+
+function middleware<T>(request: Request<T>, router: Router<T>) {
+    function host(...middleware: Middleware<T>[]) {
+        let instance = pipeline(...middleware);
+
+        return () => instance(request);
+    };
+
+    host.dispatch = (request: Request<T>) => {
+        let { route } = request.data;
+
+        if (route === undefined) {
+            throw new Error(`Middleware: route is undefined!`);
+        }
+
+        return route.dispatch(request);
+    };
+
+    host.match = (fallback: Route<T>, scheduler: Scheduler, subdomain?: string) => {
+        let state = reactive<ReturnType<typeof router.match>>({
+                parameters: undefined,
+                route: undefined
+            });
+
+        if (fallback === undefined) {
+            throw new Error('Middleware: fallback route does not exist');
+        }
+
+        effect(() => {
+            let { parameters, route } = match(request, router, subdomain);
+
+            state.parameters = parameters;
+            state.route = route || fallback;
+        });
+
+        return (request: Request<T>, next: Next<T>) => {
+            return html`${() => {
+                if (state.route === undefined) {
+                    throw new Error('Routing: route is undefined');
+                }
+
+                return root(() => {
+                    request.data.parameters = state.parameters;
+                    request.data.route = state.route;
+
+                    return next(request);
+                }, { scheduler });
+            }}`;
+        };
     };
 }
 
@@ -63,59 +129,10 @@ export default <T>(instance?: Router<T>) => {
         window.addEventListener('hashchange', onpopstate);
     }
 
-    function match(subdomain?: string) {
-        if (router.subdomains !== null) {
-            for (let i = 0, n = router.subdomains.length; i < n; i++) {
-                if (!request.hostname.startsWith(router.subdomains[i])) {
-                    continue;
-                }
-
-                subdomain = router.subdomains[i];
-                break;
-            }
-        }
-
-        return router.match(request.method, request.path, subdomain || '');
-    }
-
-    match.middleware = (subdomain?: string) => {
-        let state = reactive<ReturnType<typeof router.match>>({
-                parameters: undefined,
-                route: undefined
-            });
-
-        effect(() => {
-            let { parameters, route } = match(subdomain);
-
-            state.parameters = parameters;
-            state.route = route;
-        });
-
-        return (request: Request<T>, next: Next<T>) => {
-            return html`${() => {
-                if (state.route === undefined) {
-                    throw new Error(`Routing: route is undefined!`);
-                }
-
-                return root(() => {
-                    request.data.parameters = state.parameters;
-                    request.data.route = state.route;
-
-                    return next(request);
-                });
-            }}`;
-        };
-    };
-
     return {
         back,
         forward,
-        match,
-        middleware: (...middleware: Middleware<T>[]) => {
-            let instance = pipeline(...middleware);
-
-            return () => instance(request);
-        },
+        middleware: middleware(request, router),
         redirect: (path: string, values: unknown[] = []) => {
             if (path.indexOf('://') !== -1) {
                 return window.location.replace(path);
