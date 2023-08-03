@@ -1,4 +1,4 @@
-import { effect, reactive, root, Scheduler } from '@esportsplus/reactivity';
+import { effect, reactive, root, Root, Scheduler } from '@esportsplus/reactivity';
 import { html } from '@esportsplus/template';
 import { Middleware, Next, Request, Route, Router } from './types';
 import pipeline from '@esportsplus/pipeline';
@@ -66,9 +66,10 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
     };
 
     host.match = (fallback: Route<T>, scheduler: Scheduler, subdomain?: string) => {
-        let state = reactive<ReturnType<typeof router.match>>({
+        let state = reactive<ReturnType<typeof router.match> & { root?: Root }>({
                 parameters: undefined,
-                route: undefined
+                route: undefined,
+                root: undefined
             });
 
         if (fallback === undefined) {
@@ -88,13 +89,18 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
                     throw new Error('Routing: route is undefined');
                 }
 
-                // @ts-ignore
-                return root(() => {
+                if (state.root !== undefined) {
+                    state.root.dispose();
+                }
+
+                return root((instance) => {
                     request.data.parameters = state.parameters;
                     request.data.route = state.route;
 
+                    state.root = instance;
+
                     return next(request);
-                }, { scheduler });
+                }, scheduler);
             }}`;
         };
     };
