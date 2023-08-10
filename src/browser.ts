@@ -17,20 +17,27 @@ function forward() {
 }
 
 function href<T>(): Request<T> {
-    let { hash, hostname, href, origin, port, protocol } = new URL( window.location?.href || '' ),
-        path = hash ? hash.slice(1).split('?') : ['/', ''];
+    let data = new URL( window.location?.href || '' ),
+        path = data.hash ? data.hash.slice(1).split('?') : ['/', ''],
+        request: Request<T> = {
+            data: {},
+            href: data.href,
+            hostname: data.hostname,
+            method: 'GET',
+            origin: data.origin,
+            path: path[0],
+            port: data.port,
+            protocol: data.protocol,
+            query: {}
+        };
 
-    return {
-        data: {},
-        href,
-        hostname,
-        method: 'GET',
-        origin,
-        path: path[0],
-        port,
-        protocol,
-        query: path[1] ? Object.fromEntries( (new URLSearchParams(path[1])).entries() ) : {},
-    };
+    if (path[1]) {
+        for (let [key, value] of (new URLSearchParams(path[1])).entries()) {
+            request.query[key] = value;
+        }
+    }
+
+    return request;
 }
 
 function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
@@ -68,8 +75,8 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
     host.match = (fallback: Route<T>, scheduler: Scheduler, subdomain?: string) => {
         let state = reactive<ReturnType<typeof router.match> & { root?: Root }>({
                 parameters: undefined,
-                route: undefined,
-                root: undefined
+                root: undefined,
+                route: undefined
             });
 
         if (fallback === undefined) {
@@ -93,11 +100,11 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
                     state.root.dispose();
                 }
 
-                return root((instance) => {
+                return root((root) => {
                     request.data.parameters = state.parameters;
                     request.data.route = state.route;
 
-                    state.root = instance;
+                    state.root = root;
 
                     return next(request);
                 }, scheduler);
