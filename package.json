@@ -3,10 +3,10 @@
     "dependencies": {
         "@esportsplus/pipeline": "^0.0.5",
         "@esportsplus/reactivity": "^0.1.18",
-        "@esportsplus/template": "^0.1.23"
+        "@esportsplus/template": "^0.1.29"
     },
     "devDependencies": {
-        "@esportsplus/typescript": "^0.0.17"
+        "@esportsplus/typescript": "^0.0.18"
     },
     "main": "./build/index.js",
     "name": "@esportsplus/routing",
