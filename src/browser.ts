@@ -16,11 +16,10 @@ function forward() {
     window.history.forward();
 }
 
-function href<T>(): Request<T> {
+function href<T>() {
     let data = new URL( window.location?.href || '' ),
         path = data.hash ? data.hash.slice(1).split('?') : ['/', ''],
-        request: Request<T> = {
-            data: {},
+        request = {
             href: data.href,
             hostname: data.hostname,
             method: 'GET',
@@ -28,7 +27,7 @@ function href<T>(): Request<T> {
             path: path[0],
             port: data.port,
             protocol: data.protocol,
-            query: {}
+            query: {} as Record<PropertyKey, unknown>
         };
 
     if (path[1]) {
@@ -37,7 +36,7 @@ function href<T>(): Request<T> {
         }
     }
 
-    return request;
+    return request as Request<T>;
 }
 
 function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
@@ -101,9 +100,10 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
                 }
 
                 return root((root) => {
-                    request.data.parameters = state.parameters;
-                    request.data.route = state.route;
-
+                    request.data = {
+                        parameters: state.parameters,
+                        route: state.route
+                    };
                     state.root = root;
 
                     return next(request);
