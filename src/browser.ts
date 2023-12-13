@@ -138,7 +138,7 @@ function onpopstate() {
 
 
 export default <T>(instance?: Router<T>) => {
-    let request = reactive( href<T>() ),
+    let request = reactive( Object.assign(href<T>(), { data: {} }) ),
         router = instance || factory<T>();
 
     if (cache.push(request) === 1) {
