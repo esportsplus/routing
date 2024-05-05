@@ -3,7 +3,7 @@
     "dependencies": {
         "@esportsplus/pipeline": "^0.0.5",
         "@esportsplus/reactivity": "^0.1.19",
-        "@esportsplus/template": "^0.1.29"
+        "@esportsplus/template": "^0.1.32"
     },
     "devDependencies": {
         "@esportsplus/typescript": "^0.0.21"
