@@ -6,7 +6,7 @@
         "@esportsplus/template": "^0.1.29"
     },
     "devDependencies": {
-        "@esportsplus/typescript": "^0.0.18"
+        "@esportsplus/typescript": "^0.0.21"
     },
     "main": "./build/index.js",
     "name": "@esportsplus/routing",
