@@ -1,5 +1,4 @@
 import { effect, reactive, root, Root, Scheduler } from '@esportsplus/reactivity';
-import { html } from '@esportsplus/template';
 import { Middleware, Next, Request, Route, Router } from './types';
 import pipeline from '@esportsplus/pipeline';
 import factory from './router';
@@ -90,25 +89,23 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
         });
 
         return (request: Request<T>, next: Next<T>) => {
-            return html`${() => {
-                if (state.route === undefined) {
-                    throw new Error('Routing: route is undefined');
-                }
+            if (state.route === undefined) {
+                throw new Error('Routing: route is undefined');
+            }
 
-                if (state.root !== undefined) {
-                    state.root.dispose();
-                }
+            if (state.root !== undefined) {
+                state.root.dispose();
+            }
 
-                return root((root) => {
-                    request.data = {
-                        parameters: state.parameters,
-                        route: state.route
-                    };
-                    state.root = root;
+            return root((root) => {
+                request.data = {
+                    parameters: state.parameters,
+                    route: state.route
+                };
+                state.root = root;
 
-                    return next(request);
-                }, scheduler);
-            }}`;
+                return next(request);
+            }, scheduler);
         };
     };
 
