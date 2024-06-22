@@ -1,6 +1,6 @@
-import { effect, reactive, root, Root, Scheduler } from '@esportsplus/reactivity';
+import { effect, reactive, root, Root } from '@esportsplus/reactivity';
 import { Middleware, Next, Request, Route, Router } from './types';
-import pipeline from '@esportsplus/pipeline';
+import { next } from '@esportsplus/pipeline';
 import factory from './router';
 
 
@@ -55,22 +55,20 @@ function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
 
 function middleware<T>(request: Request<T>, router: Router<T>) {
     function host(...middleware: Middleware<T>[]) {
-        let instance = pipeline(...middleware);
-
-        return () => instance(request);
+        return middleware[0](request, next(1, middleware));
     };
 
     host.dispatch = (request: Request<T>) => {
         let { route } = request.data;
 
         if (route === undefined) {
-            throw new Error(`Middleware: route is undefined!`);
+            throw new Error(`Routing: route is undefined!`);
         }
 
-        return route.dispatch(request);
+        return route.pipeline.dispatch(request);
     };
 
-    host.match = (fallback: Route<T>, scheduler: Scheduler, subdomain?: string) => {
+    host.match = (fallback: Route<T>) => {
         let state = reactive<ReturnType<typeof router.match> & { root?: Root }>({
                 parameters: undefined,
                 root: undefined,
@@ -78,11 +76,11 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
             });
 
         if (fallback === undefined) {
-            throw new Error('Middleware: fallback route does not exist');
+            throw new Error('Routing: fallback route does not exist');
         }
 
         effect(() => {
-            let { parameters, route } = match(request, router, subdomain);
+            let { parameters, route } = match(request, router);
 
             state.parameters = parameters;
             state.route = route || fallback;
@@ -105,7 +103,7 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
                 state.root = root;
 
                 return next(request);
-            }, scheduler);
+            });
         };
     };
 

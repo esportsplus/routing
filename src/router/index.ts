@@ -1,10 +1,7 @@
-import { STATIC } from '~/constants';
-import { Options } from '~/types';
+import { ON_DELETE, ON_GET, ON_POST, ON_PUT, STATIC } from '~/constants';
+import { Name, Options, Request, Route, RouteOptions } from '~/types';
 import { Node } from './node';
-import { Route } from './route';
-
-
-let { isArray } = Array;
+import pipeline from '@esportsplus/pipeline';
 
 
 function normalize(path: string) {
@@ -12,7 +9,7 @@ function normalize(path: string) {
         path = '/' + path;
     }
 
-    if (path[path.length - 1] === '/') {
+    if (path.at(-1) === '/') {
         path = path.slice(0, -1);
     }
 
@@ -23,32 +20,31 @@ function radixkey(method: string, path: string, subdomain?: string | null) {
     return ((subdomain ? subdomain + ' ' : '') + method).toUpperCase() + ' ' + normalize(path);
 }
 
-function set<T>(route: Route<T>, key: keyof Route<T>, value?: unknown) {
-    if (!value) {
-        return;
-    }
+function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
+    for (let key in options) {
+        let value = options[key as keyof typeof options] as any;
 
-    if (!route[key]) {
-        (route[key] as unknown) = value;
-    }
-    else if (typeof value === 'string') {
-        if (typeof route[key] === 'string') {
-            (route[key] as string) += value;
+        if (key === 'middleware') {
+            for (let i = 0, n = value.length; i < n; i++) {
+                route.pipeline.add(value[i]);
+            }
         }
-    }
-    else if (isArray(value)) {
-        if (isArray(route[key])) {
-            (route[key] as unknown[]).push( ...value );
+        else if (key === 'responder') {
+            route.pipeline.add(value);
+        }
+        else {
+            // @ts-ignore
+            route[key] = (route[key] + '') + value;
         }
     }
 }
 
 
 class Router<T> {
-    groups: Omit<Options<T>, 'responder'>[] = [];
+    groups: Options<T>[] = [];
     root: Node<T>;
-    routes: Record<string, Route<T>> = {};
-    static: Record<string, Route<T>> = {};
+    routes: Record<Name, Route<T>> = {};
+    static: Record<Name, Route<T>> = {};
     subdomains: string[] | null = null;
 
 
@@ -69,22 +65,20 @@ class Router<T> {
         return this;
     }
 
-    private route({ middleware, name, path, responder, subdomain }: Options<T>) {
-        let route = new Route(responder);
+    private route(options: RouteOptions<T>) {
+        let groups = this.groups,
+            route: Route<T> = {
+                name: null,
+                path: null,
+                pipeline: pipeline<Request<T>, T>(),
+                subdomain: null
+            };
 
-        for (let i = 0, n = this.groups.length; i < n; i++) {
-            let { middleware, name, path, subdomain } = this.groups[i];
-
-            set(route, 'name', name);
-            set(route, 'middleware', middleware);
-            set(route, 'path', path);
-            set(route, 'subdomain', subdomain);
+        for (let i = 0, n = groups.length; i < n; i++) {
+            set(route, groups[i]);
         }
 
-        set(route, 'name', name);
-        set(route, 'middleware', middleware);
-        set(route, 'path', path);
-        set(route, 'subdomain', subdomain);
+        set(route, options);
 
         if (route.path) {
             route.path = normalize(route.path);
@@ -98,15 +92,15 @@ class Router<T> {
     }
 
 
-    delete(options: Options<T>) {
-        return this.on(['DELETE'], options);
+    delete(options: RouteOptions<T>) {
+        return this.on(ON_DELETE, options);
     }
 
-    get(options: Options<T>) {
-        return this.on(['GET'], options);
+    get(options: RouteOptions<T>) {
+        return this.on(ON_GET, options);
     }
 
-    group(options: Router<T>['groups'][0]) {
+    group(options: Options<T>) {
         return {
             routes: (fn: (router: Router<T>) => void) => {
                 this.groups.push(options);
@@ -116,19 +110,19 @@ class Router<T> {
         }
     }
 
-    match(method: string, path: string, subdomain?: string | null): ReturnType<Node<T>['find']> {
+    match(method: string, path: string, subdomain?: string | null) {
         let key = radixkey(method, path, subdomain);
 
         if (key in this.static) {
             return {
-                route: this.static[key]
+                route: this.static[key] as Readonly<Route<T>>
             };
         }
 
         return this.root.find(key);
     }
 
-    on(methods: string[], options: Options<T>) {
+    on(methods: string[], options: RouteOptions<T>) {
         let route = this.route(options);
 
         if (route.name) {
@@ -169,15 +163,15 @@ class Router<T> {
         return this;
     }
 
-    post(options: Options<T>) {
-        return this.on(['POST'], options);
+    post(options: RouteOptions<T>) {
+        return this.on(ON_POST, options);
     }
 
-    put(options: Options<T>) {
-        return this.on(['PUT'], options);
+    put(options: RouteOptions<T>) {
+        return this.on(ON_PUT, options);
     }
 
-    uri(name: string, values: unknown[] = []) {
+    uri(name: Name, values: unknown[] = []) {
         let path = this.routes[name]?.path;
 
         if (!path) {
@@ -202,7 +196,9 @@ class Router<T> {
                 resolved.push(values[i]);
             }
             else if (symbol === '*') {
-                resolved.push( ...values.slice(i) );
+                for (let n = values.length; i < n; i++) {
+                    resolved.push( values[i] );
+                }
                 break;
             }
             else {

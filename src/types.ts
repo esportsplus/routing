@@ -1,8 +1,11 @@
 import { NeverAsync } from '@esportsplus/typescript';
-import { Route, Router } from './router';
+import { Router } from './router';
+import pipeline from '@esportsplus/pipeline';
 
 
 type Middleware<T> = NeverAsync<(input: Request<T>, next: Next<T>) => T>;
+
+type Name = string;
 
 type Next<T> = NeverAsync<(input: Request<T>) => T>;
 
@@ -10,7 +13,6 @@ type Options<T> = {
     middleware?: Middleware<T>[];
     name?: string;
     path?: string;
-    responder: Next<T>;
     subdomain?: string;
 };
 
@@ -27,5 +29,16 @@ type Request<T> = {
     subdomain?: string;
 };
 
+type Route<T> = {
+    name: Name | null;
+    path: string | null;
+    pipeline: ReturnType<typeof pipeline<Request<T>, T>>,
+    subdomain: string | null;
+};
 
-export { Middleware, Next, Options, Request, Route, Router };
+type RouteOptions<T> = Options<T> & {
+    responder: Next<T>;
+};
+
+
+export { Middleware, Name, Next, Options, Request, Route, RouteOptions, Router };

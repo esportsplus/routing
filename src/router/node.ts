@@ -60,8 +60,8 @@ class Node<T> {
     }
 
     find(path: string): {
-        parameters?: Record<PropertyKey, unknown>;
-        route?: Route<T>;
+        parameters?: Readonly<Record<PropertyKey, unknown>>;
+        route?: Readonly<Route<T>>;
     } {
         let node: Node<T> | undefined = this,
             parameters: Record<PropertyKey, unknown> = {},
@@ -96,7 +96,7 @@ class Node<T> {
             }
         }
 
-        if ((!node || !node.route) && wildcard) {
+        if ((node === undefined || node.route === null) && wildcard !== null) {
             node = wildcard.node;
             parameters[ node.property! ] = wildcard.value;
         }
