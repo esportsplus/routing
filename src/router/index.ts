@@ -34,7 +34,7 @@ function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
         }
         else {
             // @ts-ignore
-            route[key] = (route[key] + '') + value;
+            route[key] = (route[key] || '') + value;
         }
     }
 }
