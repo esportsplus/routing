@@ -230,6 +230,8 @@ class Router<T> {
                 let copy = property[METHOD_NAME_ALL],
                     into = property[method];
 
+                property[method] = Object.create(null);
+
                 for (let path in copy) {
                     into[path] = [ ...copy[path] ];
                 }
