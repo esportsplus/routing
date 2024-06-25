@@ -2,10 +2,10 @@
     "author": "ICJR",
     "dependencies": {
         "@esportsplus/pipeline": "^1.1.0",
-        "@esportsplus/reactivity": "^0.1.21"
+        "@esportsplus/reactivity": "^0.1.23"
     },
     "devDependencies": {
-        "@esportsplus/typescript": "^0.1.2"
+        "@esportsplus/typescript": "^0.4.6"
     },
     "main": "./build/index.js",
     "name": "@esportsplus/routing",
