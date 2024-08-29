@@ -2,7 +2,7 @@
     "author": "ICJR",
     "dependencies": {
         "@esportsplus/pipeline": "^1.1.1",
-        "@esportsplus/reactivity": "^0.2.3"
+        "@esportsplus/reactivity": "^0.2.6"
     },
     "devDependencies": {
         "@esportsplus/typescript": "^0.4.9"
