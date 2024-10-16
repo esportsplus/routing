@@ -179,25 +179,26 @@ class Router<T> {
         }
 
         let resolved = [] as typeof values,
-            segments = path.split('/');
+            segments = path.split('/'),
+            v = 0;
 
         for (let i = 0, n = segments.length; i < n; i++) {
             let segment = segments[i],
                 symbol = segment[0];
 
             if (symbol === ':') {
-                resolved.push(values[i]);
+                resolved.push(values[v++]);
             }
             else if (symbol === '?') {
-                if (values[i] === undefined) {
+                if (values[v] === undefined) {
                     break;
                 }
 
-                resolved.push(values[i]);
+                resolved.push(values[v++]);
             }
             else if (symbol === '*') {
-                for (let n = values.length; i < n; i++) {
-                    resolved.push( values[i] );
+                for (let n = values.length; v < n; v++) {
+                    resolved.push( values[v] );
                 }
                 break;
             }
