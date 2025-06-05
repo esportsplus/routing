@@ -12,8 +12,8 @@ importers:
         specifier: ^1.1.4
         version: 1.1.4
       '@esportsplus/reactivity':
-        specifier: ^0.3.5
-        version: 0.3.5
+        specifier: ^0.3.6
+        version: 0.3.6
     devDependencies:
       '@esportsplus/typescript':
         specifier: ^0.8.11
@@ -24,21 +24,21 @@ packages:
   '@esportsplus/cli-passthrough@0.0.6':
     resolution: {integrity: sha512-G1/5WZjsN6S/k02M+G9yxB//gBqfjxeZeZj16O5Hn2iDUyKpIw9Y2wXrZXQWDizCS5MF/z7BURrNskCzVsaQRw==}
 
-  '@esportsplus/custom-function@0.0.9':
-    resolution: {integrity: sha512-2m4FvZ/Mk5Lq/HOxfuONRfuYm2Fs7BAJcCkBPg4o8MdwQsuOUoNJ73dAutIA1XnGi9gaJpTClemhAU7nr/tb0A==}
+  '@esportsplus/custom-function@0.0.11':
+    resolution: {integrity: sha512-M+3qcHFUWmD9O8AYLkwTnsnCf7jJyiQ9LtEIvZ7dAM9Z73Ix9qzhSd+de4XMz4IkNpmDVCmDR8ABZI5vnr47Zg==}
 
   '@esportsplus/pipeline@1.1.4':
     resolution: {integrity: sha512-Bx3PDmRHvNvfCm9wG8YkinA926AQp+20zrc2FrDarP4AyNxPqYHMVWQySq3K8UxL9x8N4zXlYmvP0hJvNPxd9g==}
 
-  '@esportsplus/reactivity@0.3.5':
-    resolution: {integrity: sha512-WL2H5XCtPuAEdUUIeGVT+ST5XZRDfl9531qnq1ChJUlHFO7wclCQ5TBkfgZ0sKPnnBcX7OLIT9CfSzZLIr4GRA==}
+  '@esportsplus/reactivity@0.3.6':
+    resolution: {integrity: sha512-puvo4wOyqkeqrHCi6DMaGtd//8BCDt/dC6d/W2PKGxY5wQtTLW3vFPijVcLnKK/6GVjrTKRJQLfGM+q4xqbkzQ==}
 
   '@esportsplus/typescript@0.8.11':
     resolution: {integrity: sha512-fCcqjMyQRmXDyWDX3bUzRgpU/OEQjCdpCcUHVvRKoCquwWbIc1Y8hvdSwoDdCovObOJ7ejyY+B5ByJg8KIaKww==}
     hasBin: true
 
-  '@esportsplus/utilities@0.0.8':
-    resolution: {integrity: sha512-HYNvwp5DiWRvLNOkslGHhGk5Jao+yNEMY/bvFXl2PKhmevaE8Xaj01YJWVWe0lEGdYoZ2YDtyfKVvSRR6NSyMw==}
+  '@esportsplus/utilities@0.0.9':
+    resolution: {integrity: sha512-dVRD5sg3wApeqW65QxrB2SkuWSnNYDxsbAcFIZs/eTKreh2XhbJ45AV5k9+/83HcTlTKHSBSIRgbN75dMkeoQw==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -198,14 +198,14 @@ snapshots:
 
   '@esportsplus/cli-passthrough@0.0.6': {}
 
-  '@esportsplus/custom-function@0.0.9': {}
+  '@esportsplus/custom-function@0.0.11': {}
 
   '@esportsplus/pipeline@1.1.4': {}
 
-  '@esportsplus/reactivity@0.3.5':
+  '@esportsplus/reactivity@0.3.6':
     dependencies:
-      '@esportsplus/custom-function': 0.0.9
-      '@esportsplus/utilities': 0.0.8
+      '@esportsplus/custom-function': 0.0.11
+      '@esportsplus/utilities': 0.0.9
 
   '@esportsplus/typescript@0.8.11':
     dependencies:
@@ -213,7 +213,7 @@ snapshots:
       tsc-alias: 1.8.16
       typescript: 5.8.3
 
-  '@esportsplus/utilities@0.0.8': {}
+  '@esportsplus/utilities@0.0.9': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
