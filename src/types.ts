@@ -41,4 +41,4 @@ type RouteOptions<T> = Options<T> & {
 };
 
 
-export { Middleware, Name, Next, Options, Request, Route, RouteOptions, Router };
+export type { Middleware, Name, Next, Options, Request, Route, RouteOptions, Router };

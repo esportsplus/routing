@@ -213,4 +213,5 @@ class Router<T> {
 
 
 export default <T>() => new Router<T>();
-export { Router, Route };
+export { Router };
+export type { Route };

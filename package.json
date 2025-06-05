@@ -1,11 +1,11 @@
 {
     "author": "ICJR",
     "dependencies": {
-        "@esportsplus/pipeline": "^1.1.2",
-        "@esportsplus/reactivity": "^0.3.3"
+        "@esportsplus/pipeline": "^1.1.4",
+        "@esportsplus/reactivity": "^0.3.5"
     },
     "devDependencies": {
-        "@esportsplus/typescript": "^0.6.4"
+        "@esportsplus/typescript": "^0.8.11"
     },
     "main": "./build/index.js",
     "name": "@esportsplus/routing",
@@ -13,9 +13,10 @@
     "scripts": {
         "build": "tsc && tsc-alias",
         "-": "-",
-        "prepare": "npm run build",
-        "prepublishOnly": "npm run build"
+        "prepare": "pnpm build",
+        "prepublishOnly": "pnpm build"
     },
+    "type": "module",
     "types": "./build/index.d.ts",
     "version": "0.1.13"
 }
