@@ -12,8 +12,8 @@ importers:
         specifier: ^1.1.4
         version: 1.1.4
       '@esportsplus/reactivity':
-        specifier: ^0.4.1
-        version: 0.4.1
+        specifier: ^0.4.2
+        version: 0.4.2
     devDependencies:
       '@esportsplus/typescript':
         specifier: ^0.8.14
@@ -30,8 +30,8 @@ packages:
   '@esportsplus/pipeline@1.1.4':
     resolution: {integrity: sha512-Bx3PDmRHvNvfCm9wG8YkinA926AQp+20zrc2FrDarP4AyNxPqYHMVWQySq3K8UxL9x8N4zXlYmvP0hJvNPxd9g==}
 
-  '@esportsplus/reactivity@0.4.1':
-    resolution: {integrity: sha512-kaeqjmgvA6EnbW/nQx8dTToAYaimxqKXAJ8u0znB2jyTeA8r2MXxKLlHoTKoL+AOblSmiXW1yu3LeHKT/WrdUQ==}
+  '@esportsplus/reactivity@0.4.2':
+    resolution: {integrity: sha512-AlHl2SMJDaEjHdmeU0d9ulZqnpXxfbmGKQZ92j4F9mdV7Z4+HYSBVxgwE9L2jKBot7pe53+2STX4GPFifHP3Lw==}
 
   '@esportsplus/typescript@0.8.14':
     resolution: {integrity: sha512-BnoclJMbwhIN7/vCn+w7vBGJVrWD7MBHhh9XvUiaoPc+XiJA9ZW9uRmjbmBgUAi4z4k4Qa6oil4h6E2H1jBDEQ==}
@@ -202,7 +202,7 @@ snapshots:
 
   '@esportsplus/pipeline@1.1.4': {}
 
-  '@esportsplus/reactivity@0.4.1':
+  '@esportsplus/reactivity@0.4.2':
     dependencies:
       '@esportsplus/custom-function': 0.0.11
       '@esportsplus/utilities': 0.0.9
