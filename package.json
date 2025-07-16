@@ -5,7 +5,7 @@
         "@esportsplus/reactivity": "^0.4.3"
     },
     "devDependencies": {
-        "@esportsplus/typescript": "^0.8.14"
+        "@esportsplus/typescript": "^0.9.1"
     },
     "main": "./build/index.js",
     "name": "@esportsplus/routing",
