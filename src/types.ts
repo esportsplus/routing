@@ -1,4 +1,4 @@
-import { NeverAsync } from '@esportsplus/typescript';
+import { NeverAsync } from '@esportsplus/utilities';
 import { Router } from './router';
 import pipeline from '@esportsplus/pipeline';
 
