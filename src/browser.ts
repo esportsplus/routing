@@ -1,4 +1,4 @@
-import { effect, reactive, root, Root } from '@esportsplus/reactivity';
+import { computed, reactive, root } from '@esportsplus/reactivity';
 import { Middleware, Next, Request, Route, Router } from './types';
 import { next } from '@esportsplus/pipeline';
 import factory from './router';
@@ -69,9 +69,8 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
     };
 
     host.match = (fallback: Route<T>) => {
-        let state = reactive<ReturnType<typeof router.match> & { root?: Root }>({
+        let state = reactive<ReturnType<typeof router.match>>({
                 parameters: undefined,
-                root: undefined,
                 route: undefined
             });
 
@@ -79,7 +78,7 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
             throw new Error('Routing: fallback route does not exist');
         }
 
-        effect(() => {
+        computed(() => {
             let { parameters, route } = match(request, router);
 
             state.parameters = parameters;
@@ -91,16 +90,11 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
                 throw new Error('Routing: route is undefined');
             }
 
-            if (state.root !== undefined) {
-                state.root.dispose();
-            }
-
-            return root((root) => {
+            return root(() => {
                 request.data = {
                     parameters: state.parameters,
                     route: state.route
                 };
-                state.root = root;
 
                 return next(request);
             });
