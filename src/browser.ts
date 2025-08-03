@@ -1,4 +1,4 @@
-import { computed, reactive, root } from '@esportsplus/reactivity';
+import { effect, reactive, root } from '@esportsplus/reactivity';
 import { Middleware, Next, Request, Route, Router } from './types';
 import { next } from '@esportsplus/pipeline';
 import factory from './router';
@@ -78,7 +78,7 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
             throw new Error('Routing: fallback route does not exist');
         }
 
-        computed(() => {
+        effect(() => {
             let { parameters, route } = match(request, router);
 
             state.parameters = parameters;
