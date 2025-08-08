@@ -44,10 +44,11 @@ function href<T>() {
 
 function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
     if (router.subdomains !== null) {
-        let subdomains = router.subdomains;
+        let hostname = request.hostname,
+            subdomains = router.subdomains;
 
         for (let i = 0, n = subdomains.length; i < n; i++) {
-            if (!request.hostname.startsWith(subdomains[i])) {
+            if (!hostname.startsWith(subdomains[i])) {
                 continue;
             }
 

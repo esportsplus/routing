@@ -1,8 +1,12 @@
-import { ON_DELETE, ON_GET, ON_POST, ON_PUT, STATIC } from '~/constants';
-import { Name, Options, Request, Route, RouteOptions } from '~/types';
+import { ON_DELETE, ON_GET, ON_POST, ON_PUT, STATIC } from '../constants';
+import { Name, Options, Request, Route, RouteOptions } from '../types';
 import { Node } from './node';
 import pipeline from '@esportsplus/pipeline';
 
+
+function key(method: string, subdomain?: string | null) {
+    return (method + (subdomain ? subdomain + ' ' : '')).toUpperCase();
+}
 
 function normalize(path: string) {
     if (path) {
@@ -10,7 +14,7 @@ function normalize(path: string) {
             path = '/' + path;
         }
 
-        if (path.at(-1) === '/') {
+        if (path.length > 1 && path[path.length - 1] === '/') {
             path = path.slice(0, -1);
         }
     }
@@ -18,21 +22,19 @@ function normalize(path: string) {
     return path || '/';
 }
 
-function radixkey(method: string, path: string, subdomain?: string | null) {
-    return ((subdomain ? subdomain + ' ' : '') + method).toUpperCase() + ' ' + normalize(path);
-}
-
 function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
+    let pipeline = route.pipeline;
+
     for (let key in options) {
         let value = options[key as keyof typeof options] as any;
 
         if (key === 'middleware') {
             for (let i = 0, n = value.length; i < n; i++) {
-                route.pipeline.add(value[i]);
+                pipeline.add(value[i]);
             }
         }
         else if (key === 'responder') {
-            route.pipeline.add(value);
+            pipeline.add(value);
         }
         else {
             // @ts-ignore
@@ -43,25 +45,24 @@ function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
 
 
 class Router<T> {
+    bucket: Record<ReturnType<typeof key>, { root: Node<T>, static: Record<string, Route<T>> }> = {};
     groups: Options<T>[] = [];
-    root: Node<T>;
     routes: Record<Name, Route<T>> = {};
-    static: Record<Name, Route<T>> = {};
     subdomains: string[] | null = null;
 
 
-    constructor() {
-        this.root = new Node();
-    }
+    private add(method: string, path: string, route: Route<T>) {
+        let bucket = this.bucket[ key(method, route.subdomain) ] ??= {
+                root: new Node(),
+                static: {}
+            };
 
-
-    private add(radixkey: string, route: Route<T>) {
-        if (radixkey.indexOf(':') === -1 || this.root.add(radixkey, route).type === STATIC) {
-            if (radixkey in this.static) {
-                throw new Error(`Routing: static path '${radixkey}' is already in use`);
+        if (path.indexOf(':') === -1 || bucket.root.add(path, route).type === STATIC) {
+            if (path in bucket.static) {
+                throw new Error(`Routing: static path '${path}' is already in use`);
             }
 
-            this.static[radixkey] = route;
+            bucket.static[path] = route;
         }
 
         return this;
@@ -113,55 +114,59 @@ class Router<T> {
     }
 
     match(method: string, path: string, subdomain?: string | null) {
-        let key = radixkey(method, path, subdomain);
+        let bucket = this.bucket[ key(method, subdomain) ];
 
-        if (key in this.static) {
-            return {
-                route: this.static[key] as Readonly<Route<T>>
-            };
+        if (!bucket) {
+            return {};
         }
 
-        return this.root.find(key);
+        path = normalize(path);
+
+        if (path in bucket.static) {
+            return { route: bucket.static[path] };
+        }
+
+        return bucket.root.find(path);
     }
 
     on(methods: string[], options: RouteOptions<T>) {
         let route = this.route(options);
 
-        if (route.name) {
-            if (this.routes[route.name]) {
-                throw new Error(`Routing: '${route.name}' is already in use`);
+        let name = route.name,
+            path = route.path,
+            subdomain = route.subdomain;
+
+        if (name) {
+            if (this.routes[name]) {
+                throw new Error(`Routing: '${name}' is already in use`);
             }
 
-            this.routes[route.name] = route;
+            this.routes[name] = route;
         }
 
-        if (route.path) {
+        if (path) {
             for (let i = 0, n = methods.length; i < n; i++) {
-                let key = radixkey(methods[i], route.path, route.subdomain);
+                let method = methods[i];
 
-                if (key.indexOf('?:') !== -1) {
-                    let segments = key.split('?:'),
-                        url = '';
+                if (path.indexOf('?:') !== -1) {
+                    let segments = path.split('?:'),
+                        url = segments[0];
 
-                    for (let i = 0, n = segments.length; i < n; i++) {
-                        this.add((url += (i > 0 ? '/:' : '/') + segments[i]), route);
+                    this.add(method, url, route);
+
+                    for (let i = 1; i < segments.length; i++) {
+                        url += '/:' + segments[i];
+                        this.add(method, url, route);
                     }
                 }
                 else {
-                    this.add(key, route);
+                    this.add(method, path, route);
                 }
             }
         }
 
-        if (route.subdomain) {
-            let subdomain = route.subdomain.toLowerCase();
-
-            if (!this.subdomains) {
-                this.subdomains = [subdomain];
-            }
-            else {
-                this.subdomains.push(subdomain);
-            }
+        if (subdomain) {
+            (this.subdomains ??= []).push( subdomain.toLowerCase() );
         }
 
         return this;

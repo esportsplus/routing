@@ -7,11 +7,11 @@ const ON_POST = ['POST'];
 const ON_PUT = ['PUT'];
 
 
-const PLACEHOLDER = 0;
+const PARAMETER = 0;
 
 const STATIC = 1;
 
 const WILDCARD = 2;
 
 
-export { ON_DELETE, ON_GET, ON_POST, ON_PUT, PLACEHOLDER, STATIC, WILDCARD };
+export { ON_DELETE, ON_GET, ON_POST, ON_PUT, PARAMETER, STATIC, WILDCARD };

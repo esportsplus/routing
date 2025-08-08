@@ -15,9 +15,11 @@
         "build": "tsc && tsc-alias",
         "-": "-",
         "prepare": "pnpm build",
-        "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "bench": "node bench/index.mjs"
     },
     "type": "module",
+    "sideEffects": false,
     "types": "./build/index.d.ts",
     "version": "0.1.31"
 }

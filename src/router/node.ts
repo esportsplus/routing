@@ -1,14 +1,18 @@
-import { PLACEHOLDER, STATIC, WILDCARD } from '~/constants';
+import { PARAMETER, STATIC, WILDCARD } from '../constants';
 import { Route } from './index';
 
 
 class Node<T> {
-    children: Map<string | number, Node<T>> | null = null;
     parent: Node<T> | null = null;
     path: string | null = null;
-    property: string | null = null;
     route: Route<T> | null = null;
+    static: Map<string | number, Node<T>> | null = null;
     type: number | null = null;
+
+    // Parameter or Wildcard parameter name
+    name: string | null = null;
+    parameter: Node<T> | null = null;
+    wildcard: Node<T> | null = null;
 
 
     constructor(parent: Node<T>['parent'] = null) {
@@ -23,33 +27,40 @@ class Node<T> {
             unnamed = 0;
 
         for (let i = 0, n = segments.length; i < n; i++) {
-            let child: Node<T> | undefined = node.children?.get(segments[i]);
+            let segment = segments[i],
+                symbol = segment[0];
 
-            if (!child) {
-                let segment = segments[i],
-                    symbol = segment[0];
-
-                if (!node.children) {
-                    node.children = new Map();
+            // Named name
+            if (symbol === ':') {
+                if (!node.parameter) {
+                    node.parameter = new Node<T>(node);
+                    node.parameter.name = (segment.slice(1) || unnamed++).toString();
                 }
 
-                node.children.set(segment, (child = new Node<T>(node)));
-
-                // Named property
-                if (symbol === ':') {
-                    child.property = (segment.slice(1) || unnamed++).toString();
-                    node.children.set(PLACEHOLDER, child);
-                    type = null;
-                }
-                // "*:" Wildcard property
-                else if (symbol === '*') {
-                    child.property = (segment.slice(2) || unnamed++).toString();
-                    node.children.set(WILDCARD, child);
-                    type = null;
-                }
+                node = node.parameter;
+                type = PARAMETER;
             }
+            // "*:" Wildcard name
+            else if (symbol === '*') {
+                if (!node.wildcard) {
+                    node.wildcard = new Node<T>(node);
+                    node.wildcard.name = (segment.slice(2) || unnamed++).toString();
+                }
 
-            node = child;
+                node = node.wildcard;
+                type = WILDCARD;
+            }
+            // Static name
+            else {
+                let next: Node<T> | undefined = node.static?.get(segment);
+
+                if (!next) {
+                    next = new Node<T>(node);
+                    (node.static ??= new Map()).set(segment, next);
+                }
+
+                node = next;
+            }
         }
 
         node.path = path;
@@ -64,76 +75,46 @@ class Node<T> {
         route?: Readonly<Route<T>>;
     } {
         let node: Node<T> | undefined = this,
-            parameters: Record<PropertyKey, unknown> = {},
+            parameters: Record<PropertyKey, unknown> | undefined,
             segments = path.split('/'),
-            wildcard: { node: Node<T>, value: string } | null = null;
+            wildcard: { node: Node<T>, value: string } | undefined;
 
         for (let i = 0, n = segments.length; i < n; i++) {
-            let segment = segments[i],
-                wc = node.children?.get(WILDCARD);
+            let segment = segments[i];
 
-            if (wc) {
+            if (node.wildcard) {
                 wildcard = {
-                    node: wc,
+                    node: node.wildcard,
                     value: segments.slice(i).join('/')
                 };
             }
 
-            // Exact matches take precedence over placeholders
-            let next: Node<T> | undefined = node.children?.get(segment);
+            // Exact matches take precedence over parameters
+            let next: Node<T> | undefined = node.static?.get(segment) as Node<T> | undefined;
 
             if (next) {
                 node = next;
+                continue;
             }
-            else {
-                node = node.children?.get(PLACEHOLDER);
 
-                if (!node) {
-                    break;
-                }
-
-                parameters[ node.property! ] = segment;
+            if (!node.parameter) {
+                node = undefined;
+                break;
             }
+
+            node = node.parameter;
+            (parameters ??= {})[node.name!] = segment;
         }
 
-        if ((node === undefined || node.route === null) && wildcard !== null) {
+        if ((node === undefined || node.route === null) && wildcard) {
             node = wildcard.node;
-            parameters[ node.property! ] = wildcard.value;
-        }
-
-        if (!node) {
-            return {};
+            (parameters ??= {})[ node.name! ] = wildcard.value;
         }
 
         return {
             parameters,
-            route: node.route!
+            route: node?.route || undefined
         };
-    }
-
-    remove(path: string) {
-        let node: Node<T> | undefined = this,
-            segments = path.split('/');
-
-        for (let i = 0, n = segments.length; i < n; i++) {
-            node = node.children?.get( segments[i] );
-
-            if (!node) {
-                return;
-            }
-        }
-
-        if (node.children?.size) {
-            return;
-        }
-
-        let parent = node.parent;
-
-        if (parent && parent.children) {
-            parent.children.delete( segments[segments.length - 1] );
-            parent.children.delete(WILDCARD);
-            parent.children.delete(PLACEHOLDER);
-        }
     }
 }
 
