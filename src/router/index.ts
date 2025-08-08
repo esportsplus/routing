@@ -1,11 +1,11 @@
-import { ON_DELETE, ON_GET, ON_POST, ON_PUT, STATIC } from '../constants';
+import { ON_DELETE, ON_GET, ON_POST, ON_PUT } from '../constants';
 import { Name, Options, Request, Route, RouteOptions } from '../types';
 import { Node } from './node';
 import pipeline from '@esportsplus/pipeline';
 
 
 function key(method: string, subdomain?: string | null) {
-    return (method + (subdomain ? subdomain + ' ' : '')).toUpperCase();
+    return (method + (subdomain ? ' ' + subdomain : '')).toUpperCase();
 }
 
 function normalize(path: string) {
@@ -57,12 +57,15 @@ class Router<T> {
                 static: {}
             };
 
-        if (path.indexOf(':') === -1 || bucket.root.add(path, route).type === STATIC) {
+        if (path.indexOf(':') === -1) {
             if (path in bucket.static) {
                 throw new Error(`Routing: static path '${path}' is already in use`);
             }
 
             bucket.static[path] = route;
+        }
+        else {
+            bucket.root.add(path, route);
         }
 
         return this;

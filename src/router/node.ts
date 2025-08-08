@@ -30,7 +30,7 @@ class Node<T> {
             let segment = segments[i],
                 symbol = segment[0];
 
-            // Named name
+            // Parameter
             if (symbol === ':') {
                 if (!node.parameter) {
                     node.parameter = new Node<T>(node);
@@ -40,7 +40,7 @@ class Node<T> {
                 node = node.parameter;
                 type = PARAMETER;
             }
-            // "*:" Wildcard name
+            // "*:" Wildcard
             else if (symbol === '*') {
                 if (!node.wildcard) {
                     node.wildcard = new Node<T>(node);
@@ -77,7 +77,7 @@ class Node<T> {
         let node: Node<T> | undefined = this,
             parameters: Record<PropertyKey, unknown> | undefined,
             segments = path.split('/'),
-            wildcard: { node: Node<T>, value: string } | undefined;
+            wildcard: { node: Node<T>, start: number } | undefined;
 
         for (let i = 0, n = segments.length; i < n; i++) {
             let segment = segments[i];
@@ -85,7 +85,7 @@ class Node<T> {
             if (node.wildcard) {
                 wildcard = {
                     node: node.wildcard,
-                    value: segments.slice(i).join('/')
+                    start: i
                 };
             }
 
@@ -108,7 +108,7 @@ class Node<T> {
 
         if ((node === undefined || node.route === null) && wildcard) {
             node = wildcard.node;
-            (parameters ??= {})[ node.name! ] = wildcard.value;
+            (parameters ??= {})[ node.name! ] = segments.slice(wildcard.start).join('/');
         }
 
         return {
