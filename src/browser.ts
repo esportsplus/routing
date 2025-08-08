@@ -4,7 +4,8 @@ import { next } from '@esportsplus/pipeline';
 import factory from './router';
 
 
-let cache: Request<any>[] = [];
+let cache: Request<any>[] = [],
+    location = window.location;
 
 
 function back() {
@@ -16,22 +17,25 @@ function forward() {
 }
 
 function href<T>() {
-    let data = new URL( window.location?.href || '' ),
-        path = data.hash ? data.hash.slice(1).split('?') : ['/', ''],
+    let hash = location.hash || '#/',
+        path = hash ? hash.slice(1).split('?') : ['/', ''],
         request = {
-            href: data.href,
-            hostname: data.hostname,
+            href: location.href,
+            hostname: location.hostname,
             method: 'GET',
-            origin: data.origin,
+            origin: location.origin,
             path: path[0],
-            port: data.port,
-            protocol: data.protocol,
+            port: location.port,
+            protocol: location.protocol,
             query: {} as Record<PropertyKey, unknown>
         };
 
     if (path[1]) {
-        for (let [key, value] of (new URLSearchParams(path[1])).entries()) {
-            request.query[key] = value;
+        let query = request.query,
+            params = new URLSearchParams(path[1]);
+
+        for (let [key, value] of params.entries()) {
+            query[key] = value;
         }
     }
 
@@ -40,12 +44,14 @@ function href<T>() {
 
 function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
     if (router.subdomains !== null) {
-        for (let i = 0, n = router.subdomains.length; i < n; i++) {
-            if (!request.hostname.startsWith(router.subdomains[i])) {
+        let subdomains = router.subdomains;
+
+        for (let i = 0, n = subdomains.length; i < n; i++) {
+            if (!request.hostname.startsWith(subdomains[i])) {
                 continue;
             }
 
-            subdomain = router.subdomains[i];
+            subdomain = subdomains[i];
             break;
         }
     }

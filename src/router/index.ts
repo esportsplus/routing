@@ -5,12 +5,14 @@ import pipeline from '@esportsplus/pipeline';
 
 
 function normalize(path: string) {
-    if (path[0] !== '/') {
-        path = '/' + path;
-    }
+    if (path) {
+        if (path[0] !== '/') {
+            path = '/' + path;
+        }
 
-    if (path.at(-1) === '/') {
-        path = path.slice(0, -1);
+        if (path.at(-1) === '/') {
+            path = path.slice(0, -1);
+        }
     }
 
     return path || '/';
@@ -55,7 +57,7 @@ class Router<T> {
 
     private add(radixkey: string, route: Route<T>) {
         if (radixkey.indexOf(':') === -1 || this.root.add(radixkey, route).type === STATIC) {
-            if (this.static[radixkey]) {
+            if (radixkey in this.static) {
                 throw new Error(`Routing: static path '${radixkey}' is already in use`);
             }
 
@@ -152,11 +154,13 @@ class Router<T> {
         }
 
         if (route.subdomain) {
+            let subdomain = route.subdomain.toLowerCase();
+
             if (!this.subdomains) {
-                this.subdomains = [route.subdomain];
+                this.subdomains = [subdomain];
             }
             else {
-                this.subdomains.push(route.subdomain);
+                this.subdomains.push(subdomain);
             }
         }
 
