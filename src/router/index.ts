@@ -1,5 +1,5 @@
 import { ON_DELETE, ON_GET, ON_POST, ON_PUT } from '../constants';
-import { Name, Options, Request, Route, RouteOptions } from '../types';
+import { Name, Options, PathParamsTuple, Request, Route, RouteOptions, RouteRegistry } from '../types';
 import { Node } from './node';
 import pipeline from '@esportsplus/pipeline';
 
@@ -44,7 +44,7 @@ function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
 }
 
 
-class Router<T> {
+class Router<T, TRoutes extends RouteRegistry = {}> {
     bucket: Record<ReturnType<typeof key>, { root: Node<T>, static: Record<string, Route<T>> }> = {};
     groups: Options<T>[] = [];
     routes: Record<Name, Route<T>> = {};
@@ -71,7 +71,7 @@ class Router<T> {
         return this;
     }
 
-    private route(options: RouteOptions<T>) {
+    private create(options: RouteOptions<T>) {
         let groups = this.groups,
             route: Route<T> = {
                 name: null,
@@ -98,22 +98,31 @@ class Router<T> {
     }
 
 
-    delete(options: RouteOptions<T>) {
-        return this.on(ON_DELETE, options);
+    delete<TName extends string = string, TPath extends string = string>(
+        options: RouteOptions<T> & { name?: TName; path?: TPath }
+    ): Router<T, TRoutes & (TName extends string ? TPath extends string ? { [K in TName]: { path: TPath } } : TRoutes : TRoutes)> {
+        this.on(ON_DELETE, options);
+        return this as any;
     }
 
-    get(options: RouteOptions<T>) {
-        return this.on(ON_GET, options);
+    get<TName extends string = string, TPath extends string = string>(
+        options: RouteOptions<T> & { name?: TName; path?: TPath }
+    ): Router<T, TRoutes & (TName extends string ? TPath extends string ? { [K in TName]: { path: TPath } } : TRoutes : TRoutes)> {
+        this.on(ON_GET, options);
+        return this as any;
     }
 
-    group(options: Options<T>) {
+    group(options: Options<T>): {
+        routes: (fn: (router: Router<T, TRoutes>) => void) => Router<T, TRoutes>
+    } {
         return {
-            routes: (fn: (router: Router<T>) => void) => {
+            routes: (fn: (router: Router<T, TRoutes>) => void) => {
                 this.groups.push(options);
                 fn(this);
                 this.groups.pop();
+                return this;
             }
-        }
+        };
     }
 
     match(method: string, path: string, subdomain?: string | null) {
@@ -132,8 +141,11 @@ class Router<T> {
         return bucket.root.find(path);
     }
 
-    on(methods: string[], options: RouteOptions<T>) {
-        let route = this.route(options);
+    on<TName extends string = string, TPath extends string = string>(
+        methods: string[],
+        options: RouteOptions<T> & { name?: TName; path?: TPath }
+    ): Router<T, TRoutes & (TName extends string ? TPath extends string ? { [K in TName]: { path: TPath } } : TRoutes : TRoutes)> {
+        let route = this.create(options);
 
         let name = route.name,
             path = route.path,
@@ -172,25 +184,34 @@ class Router<T> {
             (this.subdomains ??= []).push( subdomain.toLowerCase() );
         }
 
-        return this;
+        return this as any;
     }
 
-    post(options: RouteOptions<T>) {
-        return this.on(ON_POST, options);
+    post<TName extends string = string, TPath extends string = string>(
+        options: RouteOptions<T> & { name?: TName; path?: TPath }
+    ): Router<T, TRoutes & (TName extends string ? TPath extends string ? { [K in TName]: { path: TPath } } : TRoutes : TRoutes)> {
+        this.on(ON_POST, options);
+        return this as any;
     }
 
-    put(options: RouteOptions<T>) {
-        return this.on(ON_PUT, options);
+    put<TName extends string = string, TPath extends string = string>(
+        options: RouteOptions<T> & { name?: TName; path?: TPath }
+    ): Router<T, TRoutes & (TName extends string ? TPath extends string ? { [K in TName]: { path: TPath } } : TRoutes : TRoutes)> {
+        this.on(ON_PUT, options);
+        return this as any;
     }
 
-    uri(name: Name, values: unknown[] = []) {
+    uri<TName extends keyof TRoutes & string>(
+        name: TName,
+        values: PathParamsTuple<TRoutes[TName]['path']> = [] as any
+    ): string {
         let path = this.routes[name]?.path;
 
         if (!path) {
             throw new Error(`Routing: route name '${name}' does not exist or it does not provide a path`);
         }
 
-        let resolved = [] as typeof values,
+        let resolved: (string | number)[] = [],
             segments = path.split('/'),
             v = 0;
 
@@ -199,18 +220,18 @@ class Router<T> {
                 symbol = segment[0];
 
             if (symbol === ':') {
-                resolved.push(values[v++]);
+                resolved.push((values as (string | number)[])[v++]);
             }
             else if (symbol === '?') {
-                if (values[v] === undefined) {
+                if ((values as (string | number)[])[v] === undefined) {
                     break;
                 }
 
-                resolved.push(values[v++]);
+                resolved.push((values as (string | number)[])[v++]);
             }
             else if (symbol === '*') {
                 for (let n = values.length; v < n; v++) {
-                    resolved.push( values[v] );
+                    resolved.push((values as (string | number)[])[v]);
                 }
                 break;
             }
@@ -224,6 +245,6 @@ class Router<T> {
 }
 
 
-export default <T>() => new Router<T>();
+export default <T>() => new Router<T, {}>();
 export { Router };
 export type { Route };

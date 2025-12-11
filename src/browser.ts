@@ -1,6 +1,7 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
-import { Middleware, Next, Request, Route, Router } from './types';
 import { next } from '@esportsplus/pipeline';
+import { Middleware, Next, PathParamsTuple, Request, Route, Router, RouteRegistry } from './types';
+import { Router as RouterClass } from './router';
 import factory from './router';
 
 
@@ -20,8 +21,8 @@ function href<T>() {
     let hash = location.hash || '#/',
         path = hash ? hash.slice(1).split('?') : ['/', ''],
         request = {
-            href: location.href,
             hostname: location.hostname,
+            href: location.href,
             method: 'GET',
             origin: location.origin,
             path: path[0],
@@ -31,8 +32,8 @@ function href<T>() {
         };
 
     if (path[1]) {
-        let query = request.query,
-            params = new URLSearchParams(path[1]);
+        let params = new URLSearchParams(path[1]),
+            query = request.query;
 
         for (let [key, value] of params.entries()) {
             query[key] = value;
@@ -133,9 +134,9 @@ function onpopstate() {
 }
 
 
-export default <T>(instance?: Router<T>) => {
+export default <T, TRoutes extends RouteRegistry = {}>(instance?: RouterClass<T, TRoutes>) => {
     let request = reactive( Object.assign(href<T>(), { data: {} } as any) as Request<T> ),
-        router = instance || factory<T>();
+        router = instance || factory<T>() as RouterClass<T, TRoutes>;
 
     if (cache.push(request) === 1) {
         window.addEventListener('hashchange', onpopstate);
@@ -144,17 +145,23 @@ export default <T>(instance?: Router<T>) => {
     return {
         back,
         forward,
-        middleware: middleware(request, router),
-        redirect: (path: string, values: unknown[] = []) => {
-            if (path.indexOf('://') !== -1) {
-                return window.location.replace(path);
+        middleware: middleware(request, router as Router<T>),
+        redirect: <TName extends keyof TRoutes & string>(
+            name: TName,
+            values: PathParamsTuple<TRoutes[TName]['path']> = [] as any
+        ) => {
+            if ((name as string).indexOf('://') !== -1) {
+                return window.location.replace(name);
             }
 
-            window.location.hash = normalize( router.uri(path, values) );
+            window.location.hash = normalize( router.uri(name, values) );
         },
         router,
-        uri: (path: string, values: unknown[] = []) => {
-            return normalize( router.uri(path, values) );
+        uri: <TName extends keyof TRoutes & string>(
+            name: TName,
+            values: PathParamsTuple<TRoutes[TName]['path']> = [] as any
+        ) => {
+            return normalize( router.uri(name, values) );
         }
     };
 };
