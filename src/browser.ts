@@ -1,5 +1,5 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
-import { next } from '@esportsplus/pipeline';
+import pipeline from '@esportsplus/pipeline';
 import { Middleware, Next, PathParamsTuple, Request, Route, Router, RouteRegistry } from './types';
 import { Router as RouterClass } from './router';
 import factory from './router';
@@ -63,7 +63,7 @@ function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
 
 function middleware<T>(request: Request<T>, router: Router<T>) {
     function host(...middleware: Middleware<T>[]) {
-        return middleware[0](request, next(1, middleware));
+        return pipeline(middleware);
     };
 
     host.dispatch = (request: Request<T>) => {
