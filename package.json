@@ -11,6 +11,10 @@
     "main": "./build/index.js",
     "name": "@esportsplus/routing",
     "private": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/esportsplus/routing"
+    },
     "scripts": {
         "build": "tsc && tsc-alias",
         "-": "-",
