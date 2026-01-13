@@ -191,5 +191,5 @@ export { router };
 export type {
     Middleware,
     Next,
-    Request, Route, RouteFactory
+    Request, Route, Router, RouteFactory
 } from './types';
