@@ -1,0 +1,40 @@
+{
+    "author": "ICJR",
+    "dependencies": {
+        "@esportsplus/pipeline": "^1.2.2",
+        "@esportsplus/reactivity": "file:/../reactivity",
+        "@esportsplus/typescript": "file:/../typescript",
+        "@esportsplus/utilities": "^0.27.2"
+    },
+    "exports": {
+        "./client": {
+            "types": "./build/client/index.d.ts",
+            "default": "./build/client/index.js"
+        },
+        "./server": {
+            "types": "./build/server/index.d.ts",
+            "default": "./build/server/index.js"
+        },
+        ".": {
+            "types": "./build/index.d.ts",
+            "default": "./build/index.js"
+        }
+    },
+    "main": "./build/index.js",
+    "name": "@esportsplus/routing",
+    "private": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/esportsplus/routing"
+    },
+    "scripts": {
+        "build": "tsc",
+        "build:test": "vite build --config test/vite.config.ts",
+        "-": "-",
+        "prepare": "pnpm build",
+        "prepublishOnly": "pnpm build"
+    },
+    "type": "module",
+    "types": "./build/index.d.ts",
+    "version": "0.0.1"
+}
