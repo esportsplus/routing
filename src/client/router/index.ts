@@ -1,7 +1,6 @@
 import { ON_DELETE, ON_GET, ON_POST, ON_PUT, PACKAGE_NAME } from '../constants';
-import { Route, Name, Options, PathParamsTuple, Request, RouteOptions, RouteRegistry } from '../types';
+import { Middleware, Route, Name, Options, PathParamsTuple, RouteOptions, RouteRegistry } from '../types';
 import { Node } from './node';
-import pipeline from '@esportsplus/pipeline';
 
 
 function key(method: string, subdomain?: string | null) {
@@ -23,18 +22,18 @@ function normalize(path: string) {
 }
 
 function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
-    let pipeline = route.pipeline;
+    let middleware = route.middleware as Middleware<T>[];
 
     for (let key in options) {
         let value = options[key as keyof typeof options] as any;
 
         if (key === 'middleware') {
             for (let i = 0, n = value.length; i < n; i++) {
-                pipeline.add(value[i]);
+                middleware.push(value[i]);
             }
         }
         else if (key === 'responder') {
-            pipeline.add(value);
+            middleware.push(value);
         }
         else {
             // @ts-ignore
@@ -76,7 +75,7 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
             route: Route<T> = {
                 name: null,
                 path: null,
-                pipeline: pipeline<Request<T>, T>(),
+                middleware: [],
                 subdomain: null
             };
 

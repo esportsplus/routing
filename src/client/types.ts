@@ -1,6 +1,5 @@
 import { NeverAsync } from '@esportsplus/utilities';
 import { Router } from './router';
-import pipeline from '@esportsplus/pipeline';
 
 
 type AccumulateRoutes<T extends readonly RouteFactory<any>[]> =
@@ -77,7 +76,7 @@ type Request<T> = {
 type Route<T> = {
     name: Name | null;
     path: string | null;
-    pipeline: ReturnType<typeof pipeline<Request<T>, T>>,
+    middleware: Middleware<T>[] | Next<T>,
     subdomain: string | null;
 };
 

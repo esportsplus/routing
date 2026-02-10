@@ -1,7 +1,6 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
 import { AccumulateRoutes, ExtractOptionalParams, ExtractRequiredParams, InferOutput, Middleware, Next, PathParamsObject, Request, Route, RouteFactory, RoutePath } from './types';
 import { Router } from './router';
-import pipeline from '@esportsplus/pipeline';
 import { PACKAGE_NAME } from './constants';
 
 
@@ -11,6 +10,19 @@ let cache: Request<any>[] = [],
 
 function back() {
     window.history.back();
+}
+
+function build<T>(stages: Middleware<T>[]): Next<T> {
+    let chain: Next<T> = () => { throw new Error(`${PACKAGE_NAME}: final stage did not return a value`); };
+
+    for (let i = stages.length - 1; i >= 0; i--) {
+        let next = chain,
+            stage = stages[i];
+
+        chain = (input) => stage(input, next);
+    }
+
+    return chain;
 }
 
 function forward() {
@@ -62,24 +74,28 @@ function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
 }
 
 function middleware<T>(request: Request<T>, router: Router<T>) {
-    let middleware = pipeline<Request<T>, T>();
+    let stages: Middleware<T>[] = [];
 
-    function host(...stages: Middleware<T>[]) {
-        for (let i = 0, n = stages.length; i < n; i++) {
-            middleware.add( stages[i] );
+    function host(...middleware: Middleware<T>[]) {
+        for (let i = 0, n = middleware.length; i < n; i++) {
+            stages.push( middleware[i] );
         }
 
-        return middleware.dispatch(request) as T;
+        return build(stages)(request);
     };
 
     host.dispatch = (request: Request<T>) => {
-        let { route } = request.data;
+        let { route } = request.data as { route: Route<T> | undefined };
 
         if (route === undefined) {
             throw new Error(`${PACKAGE_NAME}: route is undefined!`);
         }
 
-        return route.pipeline.dispatch(request);
+        if (typeof route.middleware !== 'function') {
+            route.middleware = build(route.middleware);
+        }
+
+        return route.middleware(request);
     };
 
     host.match = (fallback: Route<T>) => {
