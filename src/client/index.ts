@@ -187,7 +187,6 @@ const router = <const Factories extends readonly RouteFactory<any>[]>(...factori
 
             window.location.hash = normalize(instance.uri(name as any, values as any));
         },
-        routes: instance.routes,
         uri: <RouteName extends keyof Routes>(
             name: RouteName,
             ...values: ExtractRequiredParams<RoutePath<Routes, RouteName>> extends never
