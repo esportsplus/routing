@@ -24,21 +24,26 @@ function normalize(path: string) {
 function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
     let middleware = route.middleware as Middleware<T>[];
 
-    for (let key in options) {
-        let value = options[key as keyof typeof options] as any;
+    if (options.middleware) {
+        for (let i = 0, n = options.middleware.length; i < n; i++) {
+            middleware.push(options.middleware[i]);
+        }
+    }
 
-        if (key === 'middleware') {
-            for (let i = 0, n = value.length; i < n; i++) {
-                middleware.push(value[i]);
-            }
-        }
-        else if (key === 'responder') {
-            middleware.push(value);
-        }
-        else {
-            // @ts-ignore
-            route[key] = (route[key] || '') + value;
-        }
+    if ('responder' in options) {
+        middleware.push((options as RouteOptions<T>).responder);
+    }
+
+    if (options.name) {
+        route.name = (route.name || '') + options.name;
+    }
+
+    if (options.path) {
+        route.path = (route.path || '') + options.path;
+    }
+
+    if (options.subdomain) {
+        route.subdomain = (route.subdomain || '') + options.subdomain;
     }
 }
 

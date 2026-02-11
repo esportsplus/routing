@@ -149,8 +149,7 @@ function onpopstate() {
         let state = cache[i];
 
         for (let key in values) {
-            // @ts-ignore
-            state[key] = values[key];
+            (state as Record<string, unknown>)[key] = (values as Record<string, unknown>)[key];
         }
     }
 }
