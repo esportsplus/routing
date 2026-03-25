@@ -28,12 +28,16 @@
     },
     "scripts": {
         "build": "tsc",
-        "build:test": "vite build --config test/vite.config.ts",
+        "build:test": "vite build --config tests/vite.config.ts",
+        "test": "vitest run",
         "-": "-",
         "prepare": "pnpm build",
         "prepublishOnly": "pnpm build"
     },
     "type": "module",
     "types": "./build/index.d.ts",
-    "version": "0.7.2"
+    "version": "0.7.2",
+    "devDependencies": {
+        "vitest": "^4.1.1"
+    }
 }
