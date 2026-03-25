@@ -88,26 +88,22 @@ const loggerMiddleware: Middleware<Response> = (req, next) => {
     return next(req);
 };
 
-// Apply global middleware and dispatch
-app.middleware(loggerMiddleware).dispatch;
+// Apply middleware chain — match route, log, then dispatch to route handler
+let matchMiddleware = app.middleware.match(notFound);
+
+app.middleware(matchMiddleware, loggerMiddleware, app.middleware.dispatch);
 ```
 
-### Reactive Matching
+### Fallback Route
 
 ```typescript
-// Create fallback route
+// Create fallback route for unmatched paths
 const notFound: Route<Response> = {
     name: 'not-found',
     path: null,
-    pipeline: pipeline<Request<Response>, Response>(),
+    middleware: (req) => renderNotFound(),
     subdomain: null
 };
-
-// Middleware that reactively matches routes
-const matchMiddleware = app.middleware.match(notFound);
-
-// Compose and dispatch
-app.middleware(matchMiddleware, loggerMiddleware).dispatch;
 ```
 
 ### Route Groups
@@ -138,8 +134,8 @@ const apiRoutes: RouteFactory<Response> = (r) => r
 // Required parameter
 .get({ name: 'user', path: '/users/:id', responder })
 
-// Optional parameter (prefix with ?)
-.get({ name: 'archive', path: '/posts/?:year/?:month', responder })
+// Optional parameter (prefix with ?:, no preceding /)
+.get({ name: 'archive', path: '/posts?:year?:month', responder })
 
 // Wildcard (captures rest of path)
 .get({ name: 'files', path: '/files/*:path', responder })
@@ -187,7 +183,7 @@ type Request<T> = {
 type Route<T> = {
     name: string | null;
     path: string | null;
-    pipeline: Pipeline<Request<T>, T>;
+    middleware: Middleware<T>[] | Next<T>;
     subdomain: string | null;
 };
 ```
