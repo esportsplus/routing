@@ -1,5 +1,5 @@
 import { ON_DELETE, ON_GET, ON_POST, ON_PUT, PACKAGE_NAME } from '../constants';
-import { Middleware, Route, Name, Options, PathParamsTuple, RouteOptions, RouteRegistry } from '../types';
+import { Middleware, Route, Name, Options, PathParamsObject, PathParamsTuple, RouteOptions, RouteRegistry } from '../types';
 import { Node } from './node';
 
 
@@ -252,7 +252,7 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
 
     uri<RouteName extends keyof TRoutes & string>(
         name: RouteName,
-        values: PathParamsTuple<TRoutes[RouteName]['path']> = [] as any
+        values: PathParamsObject<TRoutes[RouteName]['path']> | PathParamsTuple<TRoutes[RouteName]['path']> = [] as any
     ): string {
         let path = this.routes[name]?.path;
 
@@ -260,7 +260,10 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
             throw new Error(`${PACKAGE_NAME}: route name '${name}' does not exist or it does not provide a path`);
         }
 
-        let resolved: (string | number)[] = [],
+        let array = Array.isArray(values),
+            named = values as Record<string, string | number | (string | number)[]>,
+            positional = values as (string | number)[],
+            resolved: (string | number)[] = [],
             segments = path.split('/'),
             v = 0;
 
@@ -269,18 +272,31 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
                 symbol = segment[0];
 
             if (symbol === ':') {
-                resolved.push((values as (string | number)[])[v++]);
+                resolved.push(array ? positional[v++] : named[segment.slice(1)] as string | number);
             }
             else if (symbol === '?') {
-                if ((values as (string | number)[])[v] === undefined) {
+                let value = array ? positional[v++] : named[segment.slice(2)];
+
+                if (value === undefined) {
                     break;
                 }
 
-                resolved.push((values as (string | number)[])[v++]);
+                resolved.push(value as string | number);
             }
             else if (symbol === '*') {
-                for (let n = values.length; v < n; v++) {
-                    resolved.push((values as (string | number)[])[v]);
+                if (array) {
+                    for (let n = positional.length; v < n; v++) {
+                        resolved.push(positional[v]);
+                    }
+                }
+                else {
+                    let value = named[segment.slice(2)];
+
+                    if (Array.isArray(value)) {
+                        for (let j = 0, m = value.length; j < m; j++) {
+                            resolved.push(value[j]);
+                        }
+                    }
                 }
                 break;
             }

@@ -262,6 +262,46 @@ describe('Router', () => {
                 (router as any).uri('missing');
             }).toThrow("@esportsplus/routing: route name 'missing' does not exist or it does not provide a path");
         });
+
+        it('generates URI from named params object', () => {
+            let router = new Router<string>();
+
+            router.get({ name: 'user', path: '/users/:id', responder: responder('user') });
+
+            let uri = (router as any).uri('user', { id: 42 });
+
+            expect(uri).toBe('/users/42');
+        });
+
+        it('generates URI from named object with optional params present', () => {
+            let router = new Router<string>();
+
+            router.get({ name: 'users', path: '/users/?:id', responder: responder('users') });
+
+            let uri = (router as any).uri('users', { id: 7 });
+
+            expect(uri).toBe('/users/7');
+        });
+
+        it('generates URI from named object with optional params absent', () => {
+            let router = new Router<string>();
+
+            router.get({ name: 'users', path: '/users/?:id', responder: responder('users') });
+
+            let uri = (router as any).uri('users', {});
+
+            expect(uri).toBe('/users');
+        });
+
+        it('generates URI from named object with wildcard array', () => {
+            let router = new Router<string>();
+
+            router.get({ name: 'files', path: '/files/*:path', responder: responder('files') });
+
+            let uri = (router as any).uri('files', { path: ['docs', 'readme.txt'] });
+
+            expect(uri).toBe('/files/docs/readme.txt');
+        });
     });
 
 
