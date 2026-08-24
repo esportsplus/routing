@@ -30,21 +30,19 @@ function forward() {
 }
 
 function href<T>() {
-    let hash = location.hash || '#/',
-        path = hash ? hash.slice(1).split('?') : ['/', ''],
-        request = {
+    let request = {
             hostname: location.hostname,
             href: location.href,
             method: 'GET',
             origin: location.origin,
-            path: path[0],
+            path: location.pathname || '/',
             port: location.port,
             protocol: location.protocol,
             query: {} as Record<PropertyKey, unknown>
         };
 
-    if (path[1]) {
-        let params = new URLSearchParams(path[1]),
+    if (location.search) {
+        let params = new URLSearchParams(location.search),
             query = request.query;
 
         for (let [key, value] of params.entries()) {
@@ -53,6 +51,25 @@ function href<T>() {
     }
 
     return request as Request<T>;
+}
+
+function listener(event: MouseEvent) {
+    let anchor = (event.target as Element | null)?.closest('a');
+
+    if (!anchor) {
+        return;
+    }
+
+    if (
+        event.altKey || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey ||
+        anchor.hasAttribute('download') || anchor.origin !== location.origin || anchor.target === '_blank'
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+    window.history.pushState(null, '', anchor.href);
+    update();
 }
 
 function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
@@ -134,15 +151,7 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
     return host;
 }
 
-function normalize(uri: string) {
-    if (uri[0] === '/') {
-        return '#' + uri;
-    }
-
-    return uri;
-}
-
-function onpopstate() {
+function update() {
     let values = href();
 
     for (let i = 0, n = cache.length; i < n; i++) {
@@ -166,12 +175,13 @@ const router = <const Factories extends readonly RouteFactory<any>[]>(...factori
         request = reactive<Request<T>>(Object.assign(href<T>(), { data: {} } as any));
 
     if (cache.push(request) === 1) {
-        window.addEventListener('hashchange', onpopstate);
+        window.addEventListener('popstate', update);
     }
 
     return {
         back,
         forward,
+        listener,
         middleware: middleware(request, instance as Router<T>),
         redirect: <RouteName extends keyof Routes>(
             name: RouteName,
@@ -185,7 +195,8 @@ const router = <const Factories extends readonly RouteFactory<any>[]>(...factori
                 return window.location.replace(name as any);
             }
 
-            window.location.hash = normalize(instance.uri(name as any, values as any));
+            window.history.pushState(null, '', instance.uri(name as any, values[0] as any));
+            update();
         },
         uri: <RouteName extends keyof Routes>(
             name: RouteName,
@@ -195,7 +206,7 @@ const router = <const Factories extends readonly RouteFactory<any>[]>(...factori
                     : [params?: PathParamsObject<RoutePath<Routes, RouteName>>]
                 : [params: PathParamsObject<RoutePath<Routes, RouteName>>]
         ) => {
-            return normalize(instance.uri(name as any, values as any));
+            return instance.uri(name as any, values[0] as any);
         }
     };
 };

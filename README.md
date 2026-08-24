@@ -66,11 +66,15 @@ app.redirect('home');
 app.redirect('user', { id: 123 });
 
 // Generate URIs
-app.uri('user', { id: 456 }); // '#/users/456'
+app.uri('user', { id: 456 }); // '/users/456'
 
 // History navigation
 app.back();
 app.forward();
+
+// Intercept same-origin anchor clicks so <a href="/users/456"> routes
+// without a full page reload. Bind it wherever suits your frontend.
+document.addEventListener('click', app.listener);
 ```
 
 ### Middleware
@@ -196,17 +200,58 @@ type Route<T> = {
 
 Static paths always take precedence over parameterized paths for the same position.
 
-## Hash-Based Navigation
+## History-Based Navigation
 
-Routes use hash-based URLs (`#/path`) for client-side navigation without server configuration.
+Routes use the History API (`pushState`) for clean, hash-free client-side URLs. This
+requires the server to serve the application shell for any matched path (SPA fallback).
 
 ```typescript
-// URL: https://example.com/#/users/123?tab=profile
+// URL: https://example.com/users/123?tab=profile
 
 request.path     // '/users/123'
 request.query    // { tab: 'profile' }
 request.hostname // 'example.com'
 ```
+
+`redirect()` navigates via `pushState`, browser back/forward is handled through
+`popstate`, and `listener` intercepts same-origin anchor clicks (skipping
+modifier-clicks, `target="_blank"`, `download`, and external links) so plain
+`<a href="/path">` links navigate without a reload.
+
+### Server Configuration (SPA Fallback)
+
+Because routes are real URLs, the server must return the application shell
+(`index.html`) for **any** path the client router owns. Without this, a direct
+visit or a refresh on `/users/123` returns a `404` — the file does not exist on
+disk; only the client knows how to render it.
+
+Configure your host to rewrite unmatched, non-asset requests to `index.html`:
+
+```nginx
+# nginx
+location / {
+    try_files $uri $uri/ /index.html;
+}
+```
+
+```js
+// Express — register AFTER your API routes and static middleware
+app.use(express.static('dist'));
+app.get('*', (_req, res) => res.sendFile(path.resolve('dist/index.html')));
+```
+
+```
+# Netlify — _redirects
+/*  /index.html  200
+```
+
+```json
+// Vercel — vercel.json
+{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+```
+
+Keep the fallback below your static-asset and API handlers so real files and
+endpoints are served directly and only client routes fall through to the shell.
 
 ## License
 
