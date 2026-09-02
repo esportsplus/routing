@@ -1,5 +1,5 @@
 import { ON_DELETE, ON_GET, ON_POST, ON_PUT, PACKAGE_NAME } from '../constants';
-import { Middleware, Route, Name, Options, PathParamsObject, PathParamsTuple, RouteOptions, RouteRegistry } from '../types';
+import { Middleware, Options, PathParamsObject, PathParamsTuple, Route, RouteOptions, RouteRegistry } from '../types';
 import { Node } from './node';
 
 
@@ -51,7 +51,7 @@ function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
 class Router<T, TRoutes extends RouteRegistry = {}> {
     bucket: Record<ReturnType<typeof key>, { root: Node<T>, static: Record<string, Route<T>> }> = {};
     groups: Options<T>[] = [];
-    routes: Record<Name, Route<T>> = {};
+    routes: Record<string, Route<T>> = {};
     subdomains: string[] | null = null;
 
 
@@ -311,4 +311,3 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
 
 
 export { Router };
-export type { Route };

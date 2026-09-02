@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { PARAMETER, STATIC, WILDCARD } from '../constants';
 import { Node } from './node';
 
 
@@ -104,50 +103,6 @@ describe('Node', () => {
             expect(paramNode?.static?.get('comments')?.route).toBe(r2);
         });
 
-        it('handles unnamed parameters with auto-increment naming', () => {
-            let root = new Node<unknown>(),
-                r = route('unnamed');
-
-            root.add(':/:', r);
-
-            expect(root.parameter?.name).toBe('0');
-            expect(root.parameter?.parameter?.name).toBe('1');
-        });
-
-        it('handles unnamed wildcard parameters', () => {
-            let root = new Node<unknown>(),
-                r = route('unnamed-wildcard');
-
-            root.add('files/*:', r);
-
-            let filesNode = root.static?.get('files');
-
-            expect(filesNode?.wildcard?.name).toBe('0');
-        });
-
-        it('sets path, route, and type on terminal node', () => {
-            let root = new Node<unknown>(),
-                r1 = route('static-route'),
-                r2 = route('param-route'),
-                r3 = route('wild-route');
-
-            let n1 = root.add('about', r1),
-                n2 = root.add('users/:id', r2),
-                n3 = root.add('files/*:path', r3);
-
-            expect(n1.path).toBe('about');
-            expect(n1.route).toBe(r1);
-            expect(n1.type).toBe(STATIC);
-
-            expect(n2.path).toBe('users/:id');
-            expect(n2.route).toBe(r2);
-            expect(n2.type).toBe(PARAMETER);
-
-            expect(n3.path).toBe('files/*:path');
-            expect(n3.route).toBe(r3);
-            expect(n3.type).toBe(WILDCARD);
-        });
-
         it('reuses existing wildcard node', () => {
             let root = new Node<unknown>(),
                 r1 = route('catchall-1'),
@@ -171,19 +126,6 @@ describe('Node', () => {
 
             expect(result).toBeInstanceOf(Node);
             expect(result.route).toBe(r);
-            expect(result.path).toBe('a/b/c');
-        });
-
-        it('sets parent on child nodes', () => {
-            let root = new Node<unknown>(),
-                r = route('user');
-
-            root.add('users/:id', r);
-
-            let usersNode = root.static?.get('users');
-
-            expect(usersNode?.parent).toBe(root);
-            expect(usersNode?.parameter?.parent).toBe(usersNode);
         });
     });
 

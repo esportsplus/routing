@@ -4,8 +4,8 @@ import { Router } from './router';
 import { PACKAGE_NAME } from './constants';
 
 
-let cache: Request<any>[] = [],
-    location = window.location;
+let location = window.location,
+    requests: Request<any>[] = [];
 
 
 function back() {
@@ -154,8 +154,8 @@ function middleware<T>(request: Request<T>, router: Router<T>) {
 function update() {
     let values = href();
 
-    for (let i = 0, n = cache.length; i < n; i++) {
-        let state = cache[i];
+    for (let i = 0, n = requests.length; i < n; i++) {
+        let state = requests[i];
 
         for (let key in values) {
             (state as Record<string, unknown>)[key] = (values as Record<string, unknown>)[key];
@@ -174,7 +174,7 @@ const router = <const Factories extends readonly RouteFactory<any>[]>(...factori
         ) as Router<T, Routes>,
         request = reactive<Request<T>>(Object.assign(href<T>(), { data: {} } as any));
 
-    if (cache.push(request) === 1) {
+    if (requests.push(request) === 1) {
         window.addEventListener('popstate', update);
     }
 

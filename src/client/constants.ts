@@ -6,17 +6,10 @@ const ON_POST = ['POST'];
 
 const ON_PUT = ['PUT'];
 
-const PARAMETER = 0;
-
-const STATIC = 1;
-
-const WILDCARD = 2;
+const PACKAGE_NAME = '@esportsplus/routing';
 
 
 export {
     ON_DELETE, ON_GET, ON_POST, ON_PUT,
-    PARAMETER,
-    STATIC,
-    WILDCARD
+    PACKAGE_NAME
 };
-export { PACKAGE_NAME } from '~/constants';

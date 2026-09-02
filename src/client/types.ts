@@ -42,8 +42,6 @@ type LabeledParamsTuple<Params extends string[]> =
 
 type Middleware<T> = NeverAsync<(input: Request<T>, next: Next<T>) => T>;
 
-type Name = string;
-
 type Next<T> = NeverAsync<(input: Request<T>) => T>;
 
 type Options<T> = {
@@ -74,7 +72,7 @@ type Request<T> = {
 };
 
 type Route<T> = {
-    name: Name | null;
+    name: string | null;
     path: string | null;
     middleware: Middleware<T>[] | Next<T>,
     subdomain: string | null;
@@ -97,7 +95,7 @@ export type {
     ExtractOptionalParams, ExtractRequiredParams,
     InferOutput,
     Middleware,
-    Name, Next,
+    Next,
     Options,
     PathParamsObject, PathParamsTuple,
     Request, Router, Route, RouteFactory, RouteOptions, RoutePath, RouteRegistry
