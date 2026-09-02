@@ -1,7 +1,7 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
-import { AccumulateRoutes, ClientRedirect, ClientUri, EmptyRegistry, Group, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Root, Route, RouteFactory, ValidateFactories, Value } from './types';
-import { Router } from './router';
 import { PACKAGE_NAME } from './constants';
+import { build, Router } from './router';
+import type { AccumulateRoutes, ClientRedirect, ClientUri, EmptyRegistry, Group, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Root, Route, RouteFactory, ValidateFactories } from './types';
 
 
 let requests: RequestState[] = [];
@@ -9,19 +9,6 @@ let requests: RequestState[] = [];
 
 function back() {
     window.history.back();
-}
-
-function build<T>(stages: Middleware<T>[]): Next<T> {
-    let chain: Next<T> = () => { throw new Error(`${PACKAGE_NAME}: final stage did not return a value`); };
-
-    for (let i = stages.length - 1; i >= 0; i--) {
-        let next = chain,
-            stage = stages[i];
-
-        chain = (input) => stage(input, next);
-    }
-
-    return chain;
 }
 
 function forward() {
@@ -167,9 +154,8 @@ function update() {
 }
 
 
-const router = <const Factories extends readonly RouteFactory<Value>[]>(...factories: Factories & ValidateFactories<Factories>) => {
-    type Routes = AccumulateRoutes<Factories>;
-    type T = Value;
+const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factories: Factories & readonly RouteFactory<T>[] & ValidateFactories<Factories, T>) => {
+    type Routes = AccumulateRoutes<Factories, T>;
 
     let instance = factories.reduce(
             (router, factory) => factory(router as Router<T, EmptyRegistry, Root>),

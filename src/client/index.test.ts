@@ -1,14 +1,14 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from 'vitest';
 import { router } from './index';
-import type { Request, Route, Value } from './types';
+import type { Request, Route, Router } from './types';
 
 
-function fallback(request: Request<Value>): Value {
+function fallback(request: Request<string>): string {
     return request.path;
 }
 
-function route(): Route<Value> {
+function route(): Route<string> {
     return {
         handler: fallback,
         name: null,
@@ -30,7 +30,7 @@ afterEach(() => {
 
 describe('client router', () => {
     it('skips clicks the browser must handle', () => {
-        let app = router((r) => r.get({ name: 'next', path: '/next', responder: fallback })),
+        let app = router((r: Router<string>) => r.get({ name: 'next', path: '/next', responder: fallback })),
             anchor = document.createElement('a'),
             event = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
 
@@ -60,7 +60,7 @@ describe('client router', () => {
     });
 
     it('redirect updates the reactive request', () => {
-        let app = router((r) => r
+        let app = router((r: Router<string>) => r
                 .get({ name: 'home', path: '/', responder: fallback })
                 .get({ name: 'next', path: '/next', responder: fallback })
             ),
@@ -76,7 +76,7 @@ describe('client router', () => {
     it('matches the longest complete subdomain and exposes it', () => {
         setUrl('https://api-v2.example.com/');
 
-        let app = router((r) => r
+        let app = router((r: Router<string>) => r
                 .get({ path: '/', subdomain: 'api', responder: (request) => request.subdomain || '' })
                 .get({ path: '/', subdomain: 'api-v2', responder: (request) => request.subdomain || '' })
             ),
@@ -86,7 +86,7 @@ describe('client router', () => {
         expect(run()).toBe('api-v2');
 
         setUrl('https://apiary.example.com/');
-        app = router((r) => r.get({ path: '/', subdomain: 'api', responder: (request) => request.subdomain || '' }));
+        app = router((r: Router<string>) => r.get({ path: '/', subdomain: 'api', responder: (request) => request.subdomain || '' }));
         match = app.middleware.match(route());
         run = () => app.middleware(match, app.middleware.dispatch);
 

@@ -1,13 +1,11 @@
 import { NeverAsync } from '@esportsplus/utilities';
-import { Router } from './router';
+import type { PACKAGE_NAME } from './constants';
+import type { Router } from './router';
 
 
-type PACKAGE_NAME = '@esportsplus/routing';
-
-
-type AccumulateRoutes<Factories extends readonly RouteFactory<Value>[]> =
-    Factories extends readonly [infer F extends RouteFactory<Value>, ...infer Rest extends readonly RouteFactory<Value>[]]
-        ? MergeRegistry<RegistryOf<F>, AccumulateRoutes<Rest>>
+type AccumulateRoutes<Factories extends readonly RouteFactory<T>[], T> =
+    Factories extends readonly [infer F extends RouteFactory<T>, ...infer Rest extends readonly RouteFactory<T>[]]
+        ? MergeRegistry<RegistryOf<F>, AccumulateRoutes<Rest, T>>
         : EmptyRegistry;
 
 type Bucket<Method extends string, Sub extends string> =
@@ -51,9 +49,9 @@ type ConflictWalk<E extends string, N extends string> =
 type DuplicatePath<TRegistry extends Registry, TGroup extends Group, Method extends string, Sub extends string, Path extends string> =
     string extends Method
         ? ''
-        : Extract<`${Bucket<Method, RouteSubdomain<TGroup, Sub>>}|${Shape<FullPath<TGroup, Path>>}`, ShapeKeysOfPaths<TRegistry['paths']>> extends never
+        : Extract<`${Bucket<Method, Sub extends '' ? TGroup['subdomain'] : Sub>}|${Shape<FullPath<TGroup, Path>>}`, ShapeKeysOfPaths<TRegistry['paths']>> extends never
             ? ''
-            : `${PACKAGE_NAME}: path '${FullPath<TGroup, Path>}' is already registered for ${Method}`;
+            : `${typeof PACKAGE_NAME}: path '${FullPath<TGroup, Path>}' is already registered for ${Method}`;
 
 type EmptyRegistry = { names: {}; paths: never };
 
@@ -107,8 +105,6 @@ type FullPath<TGroup extends Group, Path extends string> = `${TGroup['path']}${P
 
 type Group = { name: string; path: string; subdomain: string };
 
-type InferOutput<F> = F extends RouteFactory<infer T> ? T : never;
-
 type MergeGroup<TGroup extends Group, G extends Partial<Group>> = {
     name: `${TGroup['name']}${G extends { name: infer N extends string } ? N : ''}`;
     path: `${TGroup['path']}${G extends { path: infer P extends string } ? P : ''}`;
@@ -139,8 +135,8 @@ type Options<T> = {
 type ParamConflict<TRegistry extends Registry, TGroup extends Group, Method extends string, Sub extends string, Path extends string> =
     string extends Method
         ? ''
-        : PathsConflict<`${Bucket<Method, RouteSubdomain<TGroup, Sub>>}|${Expand<FullPath<TGroup, Path>>}`, TRegistry['paths']> extends true
-            ? `${PACKAGE_NAME}: parameter name at path '${FullPath<TGroup, Path>}' conflicts with an existing route`
+        : PathsConflict<`${Bucket<Method, Sub extends '' ? TGroup['subdomain'] : Sub>}|${Expand<FullPath<TGroup, Path>>}`, TRegistry['paths']> extends true
+                ? `${typeof PACKAGE_NAME}: parameter name at path '${FullPath<TGroup, Path>}' conflicts with an existing route`
             : '';
 
 type PathParamsObject<Path extends string> =
@@ -162,7 +158,7 @@ type PathsConflict<A extends string, B extends string> =
 type Register<T, TRegistry extends Registry, TGroup extends Group, Method extends string, Name extends string, Sub extends string, Path extends string> =
     Router<T, {
         names: TRegistry['names'] & RegisterNames<TGroup, Name, Path>;
-        paths: TRegistry['paths'] | RegisterPaths<TGroup, Method, RouteSubdomain<TGroup, Sub>, Path>;
+        paths: TRegistry['paths'] | RegisterPaths<TGroup, Method, Sub extends '' ? TGroup['subdomain'] : Sub, Path>;
     }, TGroup>;
 
 type RegisterNames<TGroup extends Group, Name extends string, Path extends string> =
@@ -188,10 +184,10 @@ type RegistryConflict<A extends Registry, B extends Registry> =
     keyof A['names'] & keyof B['names'] extends never
         ? Extract<ShapeKeysOfPaths<A['paths']>, ShapeKeysOfPaths<B['paths']>> extends never
             ? PathsConflict<A['paths'], B['paths']> extends true
-                ? `${PACKAGE_NAME}: parameter name conflicts between route factories`
+                ? `${typeof PACKAGE_NAME}: parameter name conflicts between route factories`
                 : ''
-            : `${PACKAGE_NAME}: duplicate path between route factories`
-        : `${PACKAGE_NAME}: duplicate route name between route factories`;
+            : `${typeof PACKAGE_NAME}: duplicate path between route factories`
+        : `${typeof PACKAGE_NAME}: duplicate route name between route factories`;
 
 type RegistryOf<F> =
     F extends (router: Router<infer _T, EmptyRegistry, Root>) => Router<infer _U, infer R extends Registry, infer _G extends Group>
@@ -229,21 +225,19 @@ type RouteOptions<T> = Options<T> & {
     responder: Next<T>;
 };
 
-type RouteSubdomain<TGroup extends Group, Sub extends string> = Sub extends '' ? TGroup['subdomain'] : Sub;
-
 type SegmentError<Seg extends string, IsLast extends boolean> =
     Seg extends `?:${infer N}`
-        ? N extends '' ? `${PACKAGE_NAME}: parameter name must not be empty` : ''
+        ? N extends '' ? `${typeof PACKAGE_NAME}: parameter name must not be empty` : ''
         : Seg extends `*:${infer N}`
             ? N extends ''
-                ? `${PACKAGE_NAME}: parameter name must not be empty`
-                : IsLast extends true ? '' : `${PACKAGE_NAME}: wildcard parameter must be the last segment`
+                ? `${typeof PACKAGE_NAME}: parameter name must not be empty`
+                : IsLast extends true ? '' : `${typeof PACKAGE_NAME}: wildcard parameter must be the last segment`
             : Seg extends `:${infer N}`
-                ? N extends '' ? `${PACKAGE_NAME}: parameter name must not be empty` : ''
+                ? N extends '' ? `${typeof PACKAGE_NAME}: parameter name must not be empty` : ''
                 : Seg extends `${string}?:${string}`
-                    ? `${PACKAGE_NAME}: optional parameter must be its own segment ('/users/?:id')`
+                    ? `${typeof PACKAGE_NAME}: optional parameter must be its own segment ('/users/?:id')`
                     : Seg extends `${string}*:${string}`
-                        ? `${PACKAGE_NAME}: wildcard parameter must be its own segment ('/files/*:path')`
+                        ? `${typeof PACKAGE_NAME}: wildcard parameter must be its own segment ('/files/*:path')`
                         : '';
 
 type SegmentsSyntax<Path extends string> =
@@ -272,7 +266,7 @@ type ShapeKeysOfPaths<Paths extends string> =
 type SyntaxError<Path extends string> =
     Path extends `/${string}`
         ? SegmentsSyntax<Path>
-        : `${PACKAGE_NAME}: path '${Path}' must start with '/'`;
+        : `${typeof PACKAGE_NAME}: path '${Path}' must start with '/'`;
 
 type UriArguments<TRegistry extends Registry, Name extends keyof TRegistry['names']> =
     TRegistry['names'][Name]['path'] extends infer P extends string
@@ -285,16 +279,14 @@ type UriArguments<TRegistry extends Registry, Name extends keyof TRegistry['name
             : [params: PathParamsObject<P>]
         : [];
 
-type ValidateFactories<Factories extends readonly RouteFactory<Value>[], Acc extends Registry = EmptyRegistry> =
+type ValidateFactories<Factories extends readonly RouteFactory<T>[], T, Acc extends Registry = EmptyRegistry> =
     number extends Factories['length']
         ? Factories
-        : Factories extends readonly [infer Factory extends RouteFactory<Value>, ...infer Rest extends readonly RouteFactory<Value>[]]
+        : Factories extends readonly [infer Factory extends RouteFactory<T>, ...infer Rest extends readonly RouteFactory<T>[]]
             ? RegistryConflict<Acc, RegistryOf<Factory>> extends ''
-                ? [Factory, ...ValidateFactories<Rest, MergeRegistry<Acc, RegistryOf<Factory>>>]
+                ? [Factory, ...ValidateFactories<Rest, T, MergeRegistry<Acc, RegistryOf<Factory>>>]
                 : [Factory & RegistryConflict<Acc, RegistryOf<Factory>>, ...Rest]
             : [];
-
-type Value = {} | null | undefined;
 
 type ValidateName<TRegistry extends Registry, TGroup extends Group, Name extends string> =
     string extends Name
@@ -302,19 +294,21 @@ type ValidateName<TRegistry extends Registry, TGroup extends Group, Name extends
         : Name extends ''
             ? Name
             : FullName<TGroup, Name> extends keyof TRegistry['names']
-                ? `${PACKAGE_NAME}: route name '${FullName<TGroup, Name>}' is already in use`
+                ? `${typeof PACKAGE_NAME}: route name '${FullName<TGroup, Name>}' is already in use`
                 : Name;
 
 type ValidatePath<TRegistry extends Registry, TGroup extends Group, Method extends string, Sub extends string, Path extends string> =
-    string extends Path
-        ? Path
-        : SyntaxError<Path> extends ''
-            ? DuplicatePath<TRegistry, TGroup, Method, Sub, Path> extends ''
-                ? ParamConflict<TRegistry, TGroup, Method, Sub, Path> extends ''
-                    ? Path
-                    : ParamConflict<TRegistry, TGroup, Method, Sub, Path>
-                : DuplicatePath<TRegistry, TGroup, Method, Sub, Path>
-            : SyntaxError<Path>;
+    Method extends Method
+        ? string extends Path
+            ? Path
+            : SyntaxError<Path> extends ''
+                ? DuplicatePath<TRegistry, TGroup, Method, Sub, Path> extends ''
+                    ? ParamConflict<TRegistry, TGroup, Method, Sub, Path> extends ''
+                        ? Path
+                        : ParamConflict<TRegistry, TGroup, Method, Sub, Path>
+                    : DuplicatePath<TRegistry, TGroup, Method, Sub, Path>
+                : SyntaxError<Path>
+        : never;
 
 
 export type {
@@ -322,7 +316,6 @@ export type {
     ClientRedirect, ClientUri,
     EmptyRegistry,
     Group,
-    InferOutput,
     MergeGroup,
     Middleware,
     Next,
@@ -330,8 +323,7 @@ export type {
     PathParamsObject,
     Register,
     Registry,
-    Request, RequestState, Root, Route, Router, RouteFactory, RouteOptions, RouteSubdomain,
+    Request, RequestState, Root, Route, Router, RouteFactory, RouteOptions,
     UriArguments,
-    ValidateFactories, ValidateName, ValidatePath,
-    Value
+    ValidateFactories, ValidateName, ValidatePath
 };

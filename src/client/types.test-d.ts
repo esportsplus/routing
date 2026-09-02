@@ -1,8 +1,32 @@
 import { router } from './index';
+import type { Middleware } from './types';
 import { Router } from './router';
 
 
 let noop = () => 'x';
+
+type Response = { body: string };
+
+let typed = router(
+    (r: Router<Response>) => r.get({ name: 'typed', path: '/typed/:id', responder: () => ({ body: 'typed' }) })
+);
+
+let auth: Middleware<Response> = (request, next) => next(request),
+    typedResponse: Response = typed.middleware(auth, typed.middleware.dispatch);
+
+typedResponse;
+typed.uri('typed', { id: 1 });
+
+router(
+    (r: Router<Response>) => r.get({ name: 'first', path: '/first', responder: () => ({ body: 'first' }) }),
+    (r: Router<Response>) => r.get({ name: 'second', path: '/second', responder: () => ({ body: 'second' }) })
+);
+
+router(
+    (r: Router<Response>) => r.get({ name: 'response', path: '/response', responder: () => ({ body: 'response' }) }),
+    // @ts-expect-error factory response types must agree
+    (r: Router<string>) => r.get({ name: 'string', path: '/string', responder: () => 'string' })
+);
 
 
 // ── B1-syntax: path literal validation ─────────────────────────────
@@ -43,6 +67,20 @@ new Router<string>()
 new Router<string>()
     .get({ path: '/a', responder: noop })
     .get({ path: '/a', responder: noop, subdomain: 'api' });
+
+new Router<string>()
+    .on(['GET', 'POST'], { path: '/on', responder: noop })
+    .put({ path: '/on', responder: noop });
+
+new Router<string>()
+    .on(['GET', 'POST'], { path: '/on', responder: noop })
+    // @ts-expect-error on() registrations participate in duplicate checks for every method
+    .on(['POST'], { path: '/on', responder: noop });
+
+new Router<string>()
+    .on(['GET', 'POST'], { path: '/users/:id', responder: noop })
+    // @ts-expect-error on() registrations participate in parameter conflict checks for every method
+    .on(['POST'], { path: '/users/:uid', responder: noop });
 
 
 // ── B4-name: duplicate full name ───────────────────────────────────

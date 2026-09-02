@@ -1,20 +1,20 @@
-import { EmptyRegistry, Group, MergeGroup, Middleware, Next, Options, Register, Registry, Root, Route, RouteOptions, UriArguments, ValidateName, ValidatePath } from '../types';
 import { ON_DELETE, ON_GET, ON_POST, ON_PUT, PACKAGE_NAME } from '../constants';
 import { Node } from './node';
+import type { EmptyRegistry, Group, MergeGroup, Middleware, Next, Options, Register, Registry, Request, Root, Route, RouteOptions, UriArguments, ValidateName, ValidatePath } from '../types';
 
 
-function build<T>(stages: Middleware<T>[]): Next<T> {
+const build = <T>(stages: Middleware<T>[]): Next<T> => {
     let chain: Next<T> = () => { throw new Error(`${PACKAGE_NAME}: final stage did not return a value`); };
 
     for (let i = stages.length - 1; i >= 0; i--) {
         let next = chain,
             stage = stages[i];
 
-        chain = (input) => stage(input, next);
+        chain = (input: Request<T>) => stage(input, next);
     }
 
     return chain;
-}
+};
 
 function normalize(path: string) {
     if (path) {
@@ -115,7 +115,7 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
         };
     }
 
-    private register(methods: string[], options: RouteOptions<T>) {
+    private register(methods: readonly string[], options: RouteOptions<T>) {
         let route = this.create(options),
             path = route.path,
             subdomain = route.subdomain;
@@ -221,14 +221,14 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
         return bucket.root.find(path);
     }
 
-    on<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
-        methods: string[],
+    on<const Methods extends readonly string[], const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
+        methods: Methods,
         options: RouteOptions<T>
             & { name?: Name; path?: Path; subdomain?: Sub }
-            & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, string, Sub, Path> }
-    ): Register<T, TRegistry, TGroup, string, Name, Sub, Path> {
+            & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, Methods[number], Sub, Path> }
+    ): Register<T, TRegistry, TGroup, Methods[number], Name, Sub, Path> {
         this.register(methods, options);
-        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, string, Name, Sub, Path>;
+        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, Methods[number], Name, Sub, Path>;
     }
 
     post<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
@@ -250,7 +250,7 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
     }
 
     uri<Name extends keyof TRegistry['names'] & string>(name: Name, ...values: UriArguments<TRegistry, Name>): string {
-        let input = ([...values][0] ?? {}) as Record<string, string | number | (string | number)[]> | (string | number)[],
+        let input = ((values as readonly (Record<string, string | number | (string | number)[]> | (string | number)[])[])[0] ?? {}) as Record<string, string | number | (string | number)[]> | (string | number)[],
             path = this.routes[name].path!,
             array = Array.isArray(input),
             named = input as Record<string, string | number | (string | number)[]>,
@@ -289,6 +289,9 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
                             resolved.push(value[j]);
                         }
                     }
+                    else {
+                        resolved.push(value as string | number);
+                    }
                 }
 
                 break;
@@ -303,4 +306,4 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
 }
 
 
-export { Router };
+export { build, Router };

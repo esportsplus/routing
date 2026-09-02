@@ -29,7 +29,7 @@ import { router, Middleware, Next, Request, Route, Router } from '@esportsplus/r
 type Response = HTMLElement;
 
 const app = router(
-    (r) => r
+    (r: Router<Response>) => r
         .get({ name: 'home', path: '/', responder: () => renderHome() })
         .get({ name: 'user', path: '/users/:id', responder: (req) => renderUser(req.data.parameters?.id) })
 );
@@ -127,7 +127,7 @@ const apiRoutes = (r: Router<Response>) => r
 ### Subdomain Routing
 
 ```typescript
-const adminRoutes: RouteFactory<Response> = (r) => r
+const adminRoutes = (r: Router<Response>) => r
     .get({
         name: 'admin.dashboard',
         path: '/dashboard',
@@ -141,6 +141,8 @@ const adminRoutes: RouteFactory<Response> = (r) => r
 ## Compile-time route checks
 
 Route names, paths, and subdomains should be string literals. Literal routes are checked while compiling: duplicate names and method/path shapes, conflicting parameter names, unknown route names, and missing required URI parameters are errors rather than runtime throws. Use an expression-body `routes()` callback, as above, so routes declared in a group remain visible to the type registry.
+
+Annotate the factory parameter, not the factory: `(r: Router<Response>) => r.get(...)`. Annotating a factory as `RouteFactory<Response>` widens its route registry, so named-route and parameter inference is no longer retained.
 
 ## Types
 
