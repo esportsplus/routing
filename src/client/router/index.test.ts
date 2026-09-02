@@ -273,6 +273,16 @@ describe('Router', () => {
 
             expect(uri).toBe('/files/docs/readme.txt');
         });
+
+        it('generates URI from named object with a scalar wildcard', () => {
+            let router = new Router<string>();
+
+            router.get({ name: 'files', path: '/files/*:path', responder: responder('files') });
+
+            let uri = router.get({ name: 'files', path: '/files/*:path', responder: responder('files') }).uri('files', { path: 'docs' });
+
+            expect(uri).toBe('/files/docs');
+        });
     });
 
 

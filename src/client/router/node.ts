@@ -5,7 +5,6 @@ class Node<T> {
     route: Route<T> | null = null;
     static: Map<string, Node<T>> | null = null;
 
-    // Parameter or Wildcard parameter name
     name: string | null = null;
     parameter: Node<T> | null = null;
     wildcard: Node<T> | null = null;
@@ -19,7 +18,6 @@ class Node<T> {
             let segment = segments[i],
                 symbol = segment[0];
 
-            // Parameter
             if (symbol === ':') {
                 if (!node.parameter) {
                     node.parameter = new Node<T>();
@@ -28,7 +26,6 @@ class Node<T> {
 
                 node = node.parameter;
             }
-            // "*:" Wildcard
             else if (symbol === '*') {
                 if (!node.wildcard) {
                     node.wildcard = new Node<T>();
@@ -37,7 +34,6 @@ class Node<T> {
 
                 node = node.wildcard;
             }
-            // Static name
             else {
                 let next: Node<T> | undefined = node.static?.get(segment);
 
@@ -73,7 +69,6 @@ class Node<T> {
                 wildcardStart = i;
             }
 
-            // Exact matches take precedence over parameters
             let next: Node<T> | undefined = node.static?.get(segment);
 
             if (next) {
