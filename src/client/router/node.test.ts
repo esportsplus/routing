@@ -13,7 +13,7 @@ function route(name: string): MockRoute {
 describe('Node', () => {
     describe('add', () => {
         it('adds static path (single segment)', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('home');
 
             root.add('home', r);
@@ -23,7 +23,7 @@ describe('Node', () => {
         });
 
         it('adds multi-segment static path', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('about-team');
 
             root.add('about/team', r);
@@ -35,7 +35,7 @@ describe('Node', () => {
         });
 
         it('adds parameter path and creates parameter child with correct name', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('user');
 
             root.add('users/:id', r);
@@ -49,7 +49,7 @@ describe('Node', () => {
         });
 
         it('adds wildcard path and creates wildcard child with correct name', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('catchall');
 
             root.add('files/*:path', r);
@@ -63,7 +63,7 @@ describe('Node', () => {
         });
 
         it('adds mixed path (static + parameter segments)', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('user-post');
 
             root.add('users/:id/posts', r);
@@ -75,7 +75,7 @@ describe('Node', () => {
         });
 
         it('reuses existing static nodes for shared prefixes', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r1 = route('team'),
                 r2 = route('contact');
 
@@ -89,7 +89,7 @@ describe('Node', () => {
         });
 
         it('reuses existing parameter node', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r1 = route('user-posts'),
                 r2 = route('user-comments');
 
@@ -104,7 +104,7 @@ describe('Node', () => {
         });
 
         it('reuses existing wildcard node', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r1 = route('catchall-1'),
                 r2 = route('catchall-2');
 
@@ -119,7 +119,7 @@ describe('Node', () => {
         });
 
         it('returns the terminal node', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('terminal');
 
             let result = root.add('a/b/c', r);
@@ -131,7 +131,7 @@ describe('Node', () => {
 
     describe('find', () => {
         it('finds exact static path', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('home');
 
             root.add('home', r);
@@ -143,7 +143,7 @@ describe('Node', () => {
         });
 
         it('returns empty object for no match', () => {
-            let root = new Node<unknown>();
+            let root = new Node<string>();
 
             root.add('home', route('home'));
 
@@ -154,7 +154,7 @@ describe('Node', () => {
         });
 
         it('finds parameter path and extracts params', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('user');
 
             root.add('users/:id', r);
@@ -166,7 +166,7 @@ describe('Node', () => {
         });
 
         it('static segment takes priority over parameter', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 rStatic = route('users-all'),
                 rParam = route('user-by-id');
 
@@ -180,7 +180,7 @@ describe('Node', () => {
         });
 
         it('falls back to wildcard when no match', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('catchall');
 
             root.add('files/*:path', r);
@@ -192,7 +192,7 @@ describe('Node', () => {
         });
 
         it('wildcard captures remaining segments joined with /', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('catchall');
 
             root.add('api/*:rest', r);
@@ -204,7 +204,7 @@ describe('Node', () => {
         });
 
         it('finds mixed static + parameter paths', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('user-posts');
 
             root.add('users/:id/posts', r);
@@ -216,7 +216,7 @@ describe('Node', () => {
         });
 
         it('returns empty when no parameter node and no static match', () => {
-            let root = new Node<unknown>();
+            let root = new Node<string>();
 
             root.add('users/list', route('users-list'));
 
@@ -227,7 +227,7 @@ describe('Node', () => {
         });
 
         it('finds root-level segments', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('root-param');
 
             root.add(':slug', r);
@@ -239,7 +239,7 @@ describe('Node', () => {
         });
 
         it('wildcard fallback when terminal node has no route', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 rWild = route('catchall');
 
             // Add wildcard at root level
@@ -256,7 +256,7 @@ describe('Node', () => {
         });
 
         it('multiple parameters in path', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('user-post');
 
             root.add('users/:userId/posts/:postId', r);
@@ -268,7 +268,7 @@ describe('Node', () => {
         });
 
         it('finds multi-segment static path', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 r = route('deep');
 
             root.add('a/b/c/d', r);
@@ -280,7 +280,7 @@ describe('Node', () => {
         });
 
         it('returns empty on empty root with no routes', () => {
-            let root = new Node<unknown>();
+            let root = new Node<string>();
 
             let result = root.find('anything');
 
@@ -289,7 +289,7 @@ describe('Node', () => {
         });
 
         it('parameter fallback when static does not exist for segment', () => {
-            let root = new Node<unknown>(),
+            let root = new Node<string>(),
                 rParam = route('by-id'),
                 rStatic = route('known');
 

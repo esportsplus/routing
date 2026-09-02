@@ -58,8 +58,12 @@ type PathParamsObject<Path extends string> =
 type PathParamsTuple<Path extends string> =
     LabeledParamsTuple<ExtractParamsTuple<Path>>;
 
-type Request<T> = {
-    data: Record<PropertyKey, unknown> & ReturnType<Router<T>['match']>;
+type Request<T> = RequestState & {
+    data: ReturnType<Router<T>['match']>;
+    subdomain?: string;
+};
+
+type RequestState = {
     hostname: string;
     href: string;
     method: string;
@@ -67,8 +71,7 @@ type Request<T> = {
     path: string;
     port: string;
     protocol: string;
-    query: Record<string, unknown>;
-    subdomain?: string;
+    query: Record<string, string>;
 };
 
 type Route<T> = {
@@ -98,5 +101,5 @@ export type {
     Next,
     Options,
     PathParamsObject, PathParamsTuple,
-    Request, Router, Route, RouteFactory, RouteOptions, RoutePath, RouteRegistry
+    Request, RequestState, Router, Route, RouteFactory, RouteOptions, RoutePath, RouteRegistry
 };

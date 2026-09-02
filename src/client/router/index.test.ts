@@ -1,9 +1,10 @@
+import { Request } from '../types';
 import { describe, expect, it } from 'vitest';
 import { Router } from './index';
 
 
-type Mw = (input: unknown, next: Responder) => string;
-type Responder = (input: unknown) => string;
+type Mw = (input: Request<string>, next: Responder) => string;
+type Responder = (input: Request<string>) => string;
 
 
 function responder(label: string): Responder {

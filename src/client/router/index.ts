@@ -147,7 +147,10 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
         };
     }
 
-    match(method: string, path: string, subdomain?: string | null) {
+    match(method: string, path: string, subdomain?: string | null): {
+        parameters?: Readonly<Record<string, string>>;
+        route?: Readonly<Route<T>>;
+    } {
         let bucket = this.bucket[ key(method, subdomain) ];
 
         if (!bucket) {

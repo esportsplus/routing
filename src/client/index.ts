@@ -1,11 +1,11 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
-import { AccumulateRoutes, ExtractOptionalParams, ExtractRequiredParams, InferOutput, Middleware, Next, PathParamsObject, Request, Route, RouteFactory, RoutePath } from './types';
+import { AccumulateRoutes, ExtractOptionalParams, ExtractRequiredParams, InferOutput, Middleware, Next, PathParamsObject, Request, RequestState, Route, RouteFactory, RoutePath } from './types';
 import { Router } from './router';
 import { PACKAGE_NAME } from './constants';
 
 
 let location = window.location,
-    requests: Request<any>[] = [];
+    requests: RequestState[] = [];
 
 
 function back() {
@@ -38,7 +38,7 @@ function href<T>() {
             path: location.pathname || '/',
             port: location.port,
             protocol: location.protocol,
-            query: {} as Record<PropertyKey, unknown>
+            query: {} as Record<string, string>
         };
 
     if (location.search) {
@@ -155,11 +155,16 @@ function update() {
     let values = href();
 
     for (let i = 0, n = requests.length; i < n; i++) {
-        let state = requests[i];
+        let request = requests[i];
 
-        for (let key in values) {
-            (state as Record<string, unknown>)[key] = (values as Record<string, unknown>)[key];
-        }
+        request.hostname = values.hostname;
+        request.href = values.href;
+        request.method = values.method;
+        request.origin = values.origin;
+        request.path = values.path;
+        request.port = values.port;
+        request.protocol = values.protocol;
+        request.query = values.query;
     }
 }
 

@@ -56,11 +56,11 @@ class Node<T> {
     }
 
     find(path: string): {
-        parameters?: Readonly<Record<PropertyKey, unknown>>;
+        parameters?: Readonly<Record<string, string>>;
         route?: Readonly<Route<T>>;
     } {
         let node: Node<T> | undefined = this,
-            parameters: Record<PropertyKey, unknown> | undefined,
+            parameters: Record<string, string> | undefined,
             segments = path.split('/'),
             wildcard: { node: Node<T>, start: number } | undefined;
 
