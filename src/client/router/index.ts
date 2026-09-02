@@ -1,5 +1,5 @@
-import { ON_DELETE, ON_GET, ON_POST, ON_PUT, PACKAGE_NAME } from '../constants';
-import { Middleware, Options, PathParamsObject, PathParamsTuple, Route, RouteOptions, RouteRegistry } from '../types';
+import { EmptyRegistry, Group, MergeGroup, Middleware, Options, Register, Registry, Root, Route, RouteOptions, UriArguments, ValidateName, ValidatePath } from '../types';
+import { ON_DELETE, ON_GET, ON_POST, ON_PUT } from '../constants';
 import { Node } from './node';
 
 
@@ -48,7 +48,7 @@ function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
 }
 
 
-class Router<T, TRoutes extends RouteRegistry = {}> {
+class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group = Root> {
     bucket: Record<ReturnType<typeof key>, { root: Node<T>, static: Record<string, Route<T>> }> = {};
     groups: Options<T>[] = [];
     routes: Record<string, Route<T>> = {};
@@ -62,25 +62,23 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
             };
 
         if (path.indexOf(':') === -1) {
-            if (path in bucket.static) {
-                throw new Error(`${PACKAGE_NAME}: static path '${path}' is already in use`);
-            }
-
             bucket.static[path] = route;
         }
         else {
             bucket.root.add(path, route);
         }
+    }
 
-        return this;
+    private as<TRegistry2 extends Registry, TGroup2 extends Group>(): Router<T, TRegistry2, TGroup2> {
+        return this as Router<T, Registry, Group> as Router<T, TRegistry2, TGroup2>;
     }
 
     private create(options: RouteOptions<T>) {
         let groups = this.groups,
             route: Route<T> = {
+                middleware: [],
                 name: null,
                 path: null,
-                middleware: [],
                 subdomain: null
             };
 
@@ -101,101 +99,13 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
         return route;
     }
 
-
-    delete<RouteName extends string = string, RoutePath extends string = string>(
-        options: RouteOptions<T> & { name?: RouteName; path?: RoutePath }
-    ): Router<
-        T,
-        TRoutes & (
-            RouteName extends string
-                ? RoutePath extends string
-                    ? { [K in RouteName]: { path: RoutePath } }
-                    : TRoutes
-                : TRoutes
-        )
-    > {
-        this.on(ON_DELETE, options);
-        return this as any;
-    }
-
-    get<RouteName extends string = string, RoutePath extends string = string>(
-        options: RouteOptions<T> & { name?: RouteName; path?: RoutePath }
-    ): Router<
-        T,
-        TRoutes & (
-            RouteName extends string
-                ? RoutePath extends string
-                    ? { [K in RouteName]: { path: RoutePath } }
-                    : TRoutes
-                : TRoutes
-        )
-    > {
-        this.on(ON_GET, options);
-        return this as any;
-    }
-
-    group(options: Options<T>): {
-        routes: (fn: (router: Router<T, TRoutes>) => void) => Router<T, TRoutes>
-    } {
-        return {
-            routes: (fn: (router: Router<T, TRoutes>) => void) => {
-                this.groups.push(options);
-
-                try {
-                    fn(this);
-                }
-                finally {
-                    this.groups.pop();
-                }
-
-                return this;
-            }
-        };
-    }
-
-    match(method: string, path: string, subdomain?: string | null): {
-        parameters?: Readonly<Record<string, string>>;
-        route?: Readonly<Route<T>>;
-    } {
-        let bucket = this.bucket[ key(method, subdomain) ];
-
-        if (!bucket) {
-            return {};
-        }
-
-        path = normalize(path);
-
-        if (path in bucket.static) {
-            return { route: bucket.static[path] };
-        }
-
-        return bucket.root.find(path);
-    }
-
-    on<RouteName extends string = string, RoutePath extends string = string>(
-        methods: string[],
-        options: RouteOptions<T> & { name?: RouteName; path?: RoutePath }
-    ): Router<
-        T,
-        TRoutes & (
-            RouteName extends string
-                ? RoutePath extends string
-                    ? { [K in RouteName]: { path: RoutePath } }
-                    : TRoutes
-                : TRoutes
-        )
-    > {
-        let route = this.create(options);
-
-        let name = route.name,
+    private register(methods: string[], options: RouteOptions<T>) {
+        let route = this.create(options),
+            name = route.name,
             path = route.path,
             subdomain = route.subdomain;
 
         if (name) {
-            if (this.routes[name]) {
-                throw new Error(`${PACKAGE_NAME}: '${name}' is already in use`);
-            }
-
             this.routes[name] = route;
         }
 
@@ -236,55 +146,101 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
                 subdomains.sort((a, b) => b.length - a.length);
             }
         }
-
-        return this as any;
     }
 
-    post<RouteName extends string = string, RoutePath extends string = string>(
-        options: RouteOptions<T> & { name?: RouteName; path?: RoutePath }
-    ): Router<
-        T,
-        TRoutes & (
-            RouteName extends string
-                ? RoutePath extends string
-                    ? { [K in RouteName]: { path: RoutePath } }
-                    : TRoutes
-                : TRoutes
-        )
-    > {
-        this.on(ON_POST, options);
-        return this as any;
+
+    delete<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
+        options: RouteOptions<T>
+            & { name?: Name; path?: Path; subdomain?: Sub }
+            & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'DELETE', Sub, Path> }
+    ): Register<T, TRegistry, TGroup, 'DELETE', Name, Sub, Path> {
+        this.register(ON_DELETE, options);
+        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'DELETE', Name, Sub, Path>;
     }
 
-    put<RouteName extends string = string, RoutePath extends string = string>(
-        options: RouteOptions<T> & { name?: RouteName; path?: RoutePath }
-    ): Router<
-        T,
-        TRoutes & (
-            RouteName extends string
-                ? RoutePath extends string
-                    ? { [K in RouteName]: { path: RoutePath } }
-                    : TRoutes
-                : TRoutes
-        )
-    > {
-        this.on(ON_PUT, options);
-        return this as any;
+    get<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
+        options: RouteOptions<T>
+            & { name?: Name; path?: Path; subdomain?: Sub }
+            & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'GET', Sub, Path> }
+    ): Register<T, TRegistry, TGroup, 'GET', Name, Sub, Path> {
+        this.register(ON_GET, options);
+        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'GET', Name, Sub, Path>;
     }
 
-    uri<RouteName extends keyof TRoutes & string>(
-        name: RouteName,
-        values: PathParamsObject<TRoutes[RouteName]['path']> | PathParamsTuple<TRoutes[RouteName]['path']> = [] as any
-    ): string {
-        let path = this.routes[name]?.path;
+    group<const G extends Partial<Group>>(options: Options<T> & G): {
+        routes: <R extends Registry = TRegistry>(
+            fn: (router: Router<T, TRegistry, MergeGroup<TGroup, G>>) => Router<T, R, MergeGroup<TGroup, G>> | void
+        ) => Router<T, R, TGroup>;
+    } {
+        return {
+            routes: (fn) => {
+                this.groups.push(options);
 
-        if (!path) {
-            throw new Error(`${PACKAGE_NAME}: route name '${name}' does not exist or it does not provide a path`);
+                try {
+                    fn(this.as<TRegistry, MergeGroup<TGroup, G>>());
+                }
+                finally {
+                    this.groups.pop();
+                }
+
+                return this.as();
+            }
+        };
+    }
+
+    match(method: string, path: string, subdomain?: string | null): {
+        parameters?: Readonly<Record<string, string>>;
+        route?: Readonly<Route<T>>;
+    } {
+        let bucket = this.bucket[ key(method, subdomain) ];
+
+        if (!bucket) {
+            return {};
         }
 
-        let array = Array.isArray(values),
-            named = values as Record<string, string | number | (string | number)[]>,
-            positional = values as (string | number)[],
+        path = normalize(path);
+
+        if (path in bucket.static) {
+            return { route: bucket.static[path] };
+        }
+
+        return bucket.root.find(path);
+    }
+
+    on<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
+        methods: string[],
+        options: RouteOptions<T>
+            & { name?: Name; path?: Path; subdomain?: Sub }
+            & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, string, Sub, Path> }
+    ): Register<T, TRegistry, TGroup, string, Name, Sub, Path> {
+        this.register(methods, options);
+        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, string, Name, Sub, Path>;
+    }
+
+    post<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
+        options: RouteOptions<T>
+            & { name?: Name; path?: Path; subdomain?: Sub }
+            & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'POST', Sub, Path> }
+    ): Register<T, TRegistry, TGroup, 'POST', Name, Sub, Path> {
+        this.register(ON_POST, options);
+        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'POST', Name, Sub, Path>;
+    }
+
+    put<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
+        options: RouteOptions<T>
+            & { name?: Name; path?: Path; subdomain?: Sub }
+            & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'PUT', Sub, Path> }
+    ): Register<T, TRegistry, TGroup, 'PUT', Name, Sub, Path> {
+        this.register(ON_PUT, options);
+        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'PUT', Name, Sub, Path>;
+    }
+
+    uri<Name extends keyof TRegistry['names'] & string>(name: Name, ...values: UriArguments<TRegistry, Name>): string {
+        let input = ([...values][0] ?? {}) as Record<string, string | number | (string | number)[]> | (string | number)[],
+            path = this.routes[name].path!,
+            array = Array.isArray(input),
+            named = input as Record<string, string | number | (string | number)[]>,
+            positional = input as (string | number)[],
             resolved: (string | number)[] = [],
             segments = path.split('/'),
             v = 0;
@@ -320,6 +276,7 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
                         }
                     }
                 }
+
                 break;
             }
             else {

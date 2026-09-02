@@ -126,26 +126,6 @@ describe('Router', () => {
             expect(postResult.route).toBeDefined();
         });
 
-        it('throws on duplicate route name', () => {
-            let router = new Router<string>();
-
-            router.on(['GET'], { name: 'home', path: '/home', responder: responder('home') });
-
-            expect(() => {
-                router.on(['GET'], { name: 'home', path: '/home2', responder: responder('home2') });
-            }).toThrow("@esportsplus/routing: 'home' is already in use");
-        });
-
-        it('throws on duplicate static path', () => {
-            let router = new Router<string>();
-
-            router.on(['GET'], { path: '/home', responder: responder('home1') });
-
-            expect(() => {
-                router.on(['GET'], { path: '/home', responder: responder('home2') });
-            }).toThrow("@esportsplus/routing: static path '/home' is already in use");
-        });
-
         it('expands optional parameters', () => {
             let router = new Router<string>();
 
@@ -254,14 +234,6 @@ describe('Router', () => {
             let uri = (router as any).uri('files', ['docs', 'readme.txt']);
 
             expect(uri).toBe('/files/docs/readme.txt');
-        });
-
-        it('throws for non-existent route name', () => {
-            let router = new Router<string>();
-
-            expect(() => {
-                (router as any).uri('missing');
-            }).toThrow("@esportsplus/routing: route name 'missing' does not exist or it does not provide a path");
         });
 
         it('generates URI from named params object', () => {

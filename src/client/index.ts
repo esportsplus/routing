@@ -1,5 +1,5 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
-import { AccumulateRoutes, ExtractOptionalParams, ExtractRequiredParams, InferOutput, Middleware, Next, PathParamsObject, Request, RequestState, Route, RouteFactory, RoutePath } from './types';
+import { AccumulateRoutes, ClientRedirect, ClientUri, EmptyRegistry, Group, InferOutput, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Root, Route, RouteFactory, ValidateFactories } from './types';
 import { Router } from './router';
 import { PACKAGE_NAME } from './constants';
 
@@ -72,7 +72,7 @@ function listener(event: MouseEvent) {
     update();
 }
 
-function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
+function match<T>(request: Request<T>, router: Router<T, Registry, Group>, subdomain?: string) {
     if (router.subdomains !== null) {
         let hostname = request.hostname,
             subdomains = router.subdomains;
@@ -90,7 +90,7 @@ function match<T>(request: Request<T>, router: Router<T>, subdomain?: string) {
     return router.match(request.method, request.path, subdomain || '');
 }
 
-function middleware<T>(request: Request<T>, router: Router<T>) {
+function middleware<T>(request: Request<T>, router: Router<T, Registry, Group>) {
     let stages: Middleware<T>[] = [];
 
     function host(...middleware: Middleware<T>[]) {
@@ -169,50 +169,37 @@ function update() {
 }
 
 
-const router = <const Factories extends readonly RouteFactory<any>[]>(...factories: Factories) => {
+const router = <const Factories extends readonly RouteFactory<any>[]>(...factories: ValidateFactories<Factories>) => {
     type Routes = AccumulateRoutes<Factories>;
     type T = InferOutput<Factories[number]>;
 
     let instance = factories.reduce(
-            (r, factory) => factory(r),
-            new Router<T, {}>() as Router<T, any>
-        ) as Router<T, Routes>,
-        request = reactive<Request<T>>(Object.assign(href<T>(), { data: {} } as any));
+            (router, factory) => factory(router as Router<T, EmptyRegistry, Root>),
+            new Router<T, EmptyRegistry, Root>() as Router<T, Registry, Root>
+        ) as Router<T, Routes, Root>,
+        request = reactive<Request<T>>(Object.assign(href<T>(), { data: { parameters: undefined, route: undefined } }));
 
     if (requests.push(request) === 1) {
         window.addEventListener('popstate', update);
     }
 
+    let uri = instance.uri as (name: string, params?: PathParamsObject<string>) => string;
+
     return {
         back,
         forward,
         listener,
-        middleware: middleware(request, instance as Router<T>),
-        redirect: <RouteName extends keyof Routes>(
-            name: RouteName,
-            ...values: ExtractRequiredParams<RoutePath<Routes, RouteName>> extends never
-                ? ExtractOptionalParams<RoutePath<Routes, RouteName>> extends never
-                    ? []
-                    : [params?: PathParamsObject<RoutePath<Routes, RouteName>>]
-                : [params: PathParamsObject<RoutePath<Routes, RouteName>>]
-        ) => {
-            if ((name as string).indexOf('://') !== -1) {
-                return window.location.replace(name as any);
+        middleware: middleware(request, instance),
+        redirect: ((name: string, params?: PathParamsObject<string>) => {
+            if (name.indexOf('://') !== -1) {
+                window.location.replace(name);
+                return;
             }
 
-            window.history.pushState(null, '', instance.uri(name as any, values[0] as any));
+            window.history.pushState(null, '', uri(name, params));
             update();
-        },
-        uri: <RouteName extends keyof Routes>(
-            name: RouteName,
-            ...values: ExtractRequiredParams<RoutePath<Routes, RouteName>> extends never
-                ? ExtractOptionalParams<RoutePath<Routes, RouteName>> extends never
-                    ? []
-                    : [params?: PathParamsObject<RoutePath<Routes, RouteName>>]
-                : [params: PathParamsObject<RoutePath<Routes, RouteName>>]
-        ) => {
-            return instance.uri(name as any, values[0] as any);
-        }
+        }) as ClientRedirect<Routes>,
+        uri: instance.uri as ClientUri<Routes>
     };
 };
 
