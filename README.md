@@ -24,43 +24,20 @@ pnpm add @esportsplus/routing
 ### Define Routes
 
 ```typescript
-import { router, Middleware, Next, Request, Route, RouteFactory } from '@esportsplus/routing/client';
+import { router, Middleware, Next, Request, Route, Router } from '@esportsplus/routing/client';
 
 type Response = HTMLElement;
 
-// Route factory for modular definitions
-const homeRoutes: RouteFactory<Response> = (r) => r
-    .get({
-        name: 'home',
-        path: '/',
-        responder: (req) => renderHome()
-    })
-    .get({
-        name: 'about',
-        path: '/about',
-        responder: (req) => renderAbout()
-    });
-
-const userRoutes: RouteFactory<Response> = (r) => r
-    .get({
-        name: 'user',
-        path: '/users/:id',
-        responder: (req) => renderUser(req.data.parameters?.id)
-    })
-    .get({
-        name: 'user.settings',
-        path: '/users/:id/settings',
-        middleware: [authMiddleware],
-        responder: (req) => renderSettings(req.data.parameters?.id)
-    });
+const app = router(
+    (r) => r
+        .get({ name: 'home', path: '/', responder: () => renderHome() })
+        .get({ name: 'user', path: '/users/:id', responder: (req) => renderUser(req.data.parameters?.id) })
+);
 ```
 
 ### Create Router
 
 ```typescript
-// Compose route factories
-const app = router(homeRoutes, userRoutes);
-
 // Navigate
 app.redirect('home');
 app.redirect('user', { id: 123 });
@@ -72,7 +49,7 @@ app.uri('user', { id: 456 }); // '/users/456'
 app.back();
 app.forward();
 
-// Intercept same-origin anchor clicks so <a href="/users/456"> routes
+// Intercept plain same-origin anchors so <a href="/users/456"> routes
 // without a full page reload. Bind it wherever suits your frontend.
 document.addEventListener('click', app.listener);
 ```
@@ -105,7 +82,7 @@ app.middleware(matchMiddleware, loggerMiddleware, app.middleware.dispatch);
 const notFound: Route<Response> = {
     name: 'not-found',
     path: null,
-    middleware: (req) => renderNotFound(),
+    handler: () => renderNotFound(),
     subdomain: null
 };
 ```
@@ -113,19 +90,21 @@ const notFound: Route<Response> = {
 ### Route Groups
 
 ```typescript
-const apiRoutes: RouteFactory<Response> = (r) => r
+const apiRoutes = (r: Router<Response>) => r
     .group({
+        name: 'api.',
         path: '/api/v1',
+        subdomain: 'api',
         middleware: [apiAuth]
     })
     .routes((r) => r
         .get({
-            name: 'api.users',
+            name: 'users',
             path: '/users',
             responder: handleUsers
         })
         .post({
-            name: 'api.users.create',
+            name: 'users.create',
             path: '/users',
             responder: handleCreateUser
         })
@@ -138,10 +117,10 @@ const apiRoutes: RouteFactory<Response> = (r) => r
 // Required parameter
 .get({ name: 'user', path: '/users/:id', responder })
 
-// Optional parameter (prefix with ?:, no preceding /)
-.get({ name: 'archive', path: '/posts?:year?:month', responder })
+// Optional parameter (its own segment)
+.get({ name: 'archive', path: '/posts/?:year/?:month', responder })
 
-// Wildcard (captures rest of path)
+// Wildcard (captures one or more remaining segments)
 .get({ name: 'files', path: '/files/*:path', responder })
 ```
 
@@ -157,12 +136,15 @@ const adminRoutes: RouteFactory<Response> = (r) => r
     });
 ```
 
+`www` is normalised to the default subdomain (`''`). Group `name` and `path` values are prefixes; an inner non-empty `subdomain` overrides its group's subdomain.
+
+## Compile-time route checks
+
+Route names, paths, and subdomains should be string literals. Literal routes are checked while compiling: duplicate names and method/path shapes, conflicting parameter names, unknown route names, and missing required URI parameters are errors rather than runtime throws. Use an expression-body `routes()` callback, as above, so routes declared in a group remain visible to the type registry.
+
 ## Types
 
 ```typescript
-// Route factory function
-type RouteFactory<T> = (router: Router<T, any>) => Router<T, RouteRegistry>;
-
 // Middleware function
 type Middleware<T> = (input: Request<T>, next: Next<T>) => T;
 
@@ -171,7 +153,7 @@ type Next<T> = (input: Request<T>) => T;
 
 // Request object
 type Request<T> = {
-    data: Record<PropertyKey, unknown> & { parameters?: Record<string, unknown>; route?: Route<T> };
+    data: { parameters?: Readonly<Record<string, string>>; route?: Readonly<Route<T>> };
     hostname: string;
     href: string;
     method: string;
@@ -179,7 +161,7 @@ type Request<T> = {
     path: string;
     port: string;
     protocol: string;
-    query: Record<string, unknown>;
+    query: Record<string, string>;
     subdomain?: string;
 };
 
@@ -187,7 +169,7 @@ type Request<T> = {
 type Route<T> = {
     name: string | null;
     path: string | null;
-    middleware: Middleware<T>[] | Next<T>;
+    handler: Next<T>;
     subdomain: string | null;
 };
 ```
@@ -215,7 +197,7 @@ request.hostname // 'example.com'
 
 `redirect()` navigates via `pushState`, browser back/forward is handled through
 `popstate`, and `listener` intercepts same-origin anchor clicks (skipping
-modifier-clicks, `target="_blank"`, `download`, and external links) so plain
+modifier-clicks, non-`_self` targets, `download`, and external links) so plain
 `<a href="/path">` links navigate without a reload.
 
 ### Server Configuration (SPA Fallback)
