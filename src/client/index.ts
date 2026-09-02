@@ -102,17 +102,13 @@ function middleware<T>(request: Request<T>, router: Router<T, Registry, Group>) 
     };
 
     host.dispatch = (request: Request<T>) => {
-        let { route } = request.data as { route: Route<T> | undefined };
+        let { route } = request.data;
 
         if (route === undefined) {
             throw new Error(`${PACKAGE_NAME}: route is undefined!`);
         }
 
-        if (typeof route.middleware !== 'function') {
-            route.middleware = build(route.middleware);
-        }
-
-        return route.middleware(request);
+        return route.handler(request);
     };
 
     host.match = (fallback: Route<T>) => {

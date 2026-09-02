@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { Node } from './node';
 
 
-type MockRoute = { name: string; path: null; middleware: never[]; subdomain: null };
+type MockRoute = { handler: () => string; name: string; path: null; subdomain: null };
 
 
 function route(name: string): MockRoute {
-    return { name, path: null, middleware: [], subdomain: null };
+    return { handler: () => name, name, path: null, subdomain: null };
 }
 
 

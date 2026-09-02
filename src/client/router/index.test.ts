@@ -87,18 +87,16 @@ describe('Router', () => {
         });
 
         it('static match takes priority over tree match', () => {
-            let router = new Router<string>(),
-                dynamicResponder = responder('dynamic'),
-                staticResponder = responder('static');
+            let router = new Router<string>();
 
-            router.get({ path: '/users/:id', responder: dynamicResponder });
-            router.get({ path: '/users/all', responder: staticResponder });
+            router.get({ path: '/users/:id', responder: responder('dynamic') });
+            router.get({ path: '/users/all', responder: responder('static') });
 
             let result = router.match('GET', '/users/all');
 
             expect(result.route).toBeDefined();
             expect(result.route!.path).toBe('/users/all');
-            expect(result.route!.middleware).toContain(staticResponder);
+            expect(result.route!.handler({} as Request<string>)).toBe('static');
         });
     });
 
@@ -292,17 +290,16 @@ describe('Router', () => {
         });
 
         it('cascades middleware to child routes', () => {
-            let router = new Router<string>(),
-                authMw = mw('auth');
+            let router = new Router<string>();
 
-            router.group({ middleware: [authMw as any] }).routes((r) => {
+            router.group({ middleware: [mw('auth')] }).routes((r) => {
                 r.get({ path: '/protected', responder: responder('protected') });
             });
 
             let result = router.match('GET', '/protected');
 
             expect(result.route).toBeDefined();
-            expect(result.route!.middleware).toContain(authMw);
+            expect(result.route!.handler({} as Request<string>)).toBe('auth:protected');
         });
 
         it('applies subdomain to child routes', () => {

@@ -1,10 +1,19 @@
-import { EmptyRegistry, Group, MergeGroup, Middleware, Options, Register, Registry, Root, Route, RouteOptions, UriArguments, ValidateName, ValidatePath } from '../types';
-import { ON_DELETE, ON_GET, ON_POST, ON_PUT } from '../constants';
+import { EmptyRegistry, Group, MergeGroup, Middleware, Next, Options, Register, Registry, Root, Route, RouteOptions, UriArguments, ValidateName, ValidatePath } from '../types';
+import { ON_DELETE, ON_GET, ON_POST, ON_PUT, PACKAGE_NAME } from '../constants';
 import { Node } from './node';
 
 
-function key(method: string, subdomain?: string | null) {
-    return (method + (subdomain ? ' ' + subdomain : '')).toUpperCase();
+function build<T>(stages: Middleware<T>[]): Next<T> {
+    let chain: Next<T> = () => { throw new Error(`${PACKAGE_NAME}: final stage did not return a value`); };
+
+    for (let i = stages.length - 1; i >= 0; i--) {
+        let next = chain,
+            stage = stages[i];
+
+        chain = (input) => stage(input, next);
+    }
+
+    return chain;
 }
 
 function normalize(path: string) {
@@ -21,9 +30,7 @@ function normalize(path: string) {
     return path || '/';
 }
 
-function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
-    let middleware = route.middleware as Middleware<T>[];
-
+function set<T>(state: { name: string | null; path: string | null; subdomain: string | null }, middleware: Middleware<T>[], options: Options<T> | RouteOptions<T>) {
     if (options.middleware) {
         for (let i = 0, n = options.middleware.length; i < n; i++) {
             middleware.push(options.middleware[i]);
@@ -35,28 +42,28 @@ function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
     }
 
     if (options.name) {
-        route.name = (route.name || '') + options.name;
+        state.name = (state.name || '') + options.name;
     }
 
     if (options.path) {
-        route.path = (route.path || '') + options.path;
+        state.path = (state.path || '') + options.path;
     }
 
     if (options.subdomain) {
-        route.subdomain = options.subdomain;
+        state.subdomain = options.subdomain;
     }
 }
 
 
 class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group = Root> {
-    bucket: Record<ReturnType<typeof key>, { root: Node<T>, static: Record<string, Route<T>> }> = {};
+    bucket: Record<string, Record<string, { root: Node<T>, static: Record<string, Route<T>> }>> = {};
     groups: Options<T>[] = [];
     routes: Record<string, Route<T>> = {};
     subdomains: string[] | null = null;
 
 
     private add(method: string, path: string, route: Route<T>) {
-        let bucket = this.bucket[ key(method, route.subdomain) ] ??= {
+        let bucket = (this.bucket[method] ??= {})[route.subdomain || ''] ??= {
                 root: new Node(),
                 static: {}
             };
@@ -73,45 +80,53 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
         return this as Router<T, Registry, Group> as Router<T, TRegistry2, TGroup2>;
     }
 
-    private create(options: RouteOptions<T>) {
+    private create(options: RouteOptions<T>): Route<T> {
         let groups = this.groups,
-            route: Route<T> = {
-                middleware: [],
-                name: null,
-                path: null,
-                subdomain: null
+            middleware: Middleware<T>[] = [],
+            state = {
+                name: null as string | null,
+                path: null as string | null,
+                subdomain: null as string | null
             };
 
         for (let i = 0, n = groups.length; i < n; i++) {
-            set(route, groups[i]);
+            set(state, middleware, groups[i]);
         }
 
-        set(route, options);
+        set(state, middleware, options);
 
-        if (route.path) {
-            route.path = normalize(route.path);
+        if (state.path) {
+            state.path = normalize(state.path);
         }
 
-        if (route.subdomain === 'www') {
-            route.subdomain = '';
+        if (state.subdomain) {
+            state.subdomain = state.subdomain.toLowerCase();
+
+            if (state.subdomain === 'www') {
+                state.subdomain = '';
+            }
         }
 
-        return route;
+        return {
+            handler: build(middleware),
+            name: state.name,
+            path: state.path,
+            subdomain: state.subdomain
+        };
     }
 
     private register(methods: string[], options: RouteOptions<T>) {
         let route = this.create(options),
-            name = route.name,
             path = route.path,
             subdomain = route.subdomain;
 
-        if (name) {
-            this.routes[name] = route;
+        if (route.name) {
+            this.routes[route.name] = route;
         }
 
         if (path) {
             for (let i = 0, n = methods.length; i < n; i++) {
-                let method = methods[i];
+                let method = methods[i].toUpperCase();
 
                 if (path.indexOf('/?:') !== -1) {
                     let segments = path.split('/'),
@@ -138,11 +153,10 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
         }
 
         if (subdomain) {
-            let subdomains = this.subdomains ??= [],
-                value = subdomain.toLowerCase();
+            let subdomains = this.subdomains ??= [];
 
-            if (subdomains.indexOf(value) === -1) {
-                subdomains.push(value);
+            if (subdomains.indexOf(subdomain) === -1) {
+                subdomains.push(subdomain);
                 subdomains.sort((a, b) => b.length - a.length);
             }
         }
@@ -192,7 +206,7 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
         parameters?: Readonly<Record<string, string>>;
         route?: Readonly<Route<T>>;
     } {
-        let bucket = this.bucket[ key(method, subdomain) ];
+        let bucket = this.bucket[method]?.[subdomain || ''];
 
         if (!bucket) {
             return {};

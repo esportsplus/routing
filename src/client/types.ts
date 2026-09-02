@@ -224,7 +224,7 @@ type RequestState = {
 type Root = { name: ''; path: ''; subdomain: '' };
 
 type Route<T> = {
-    middleware: Middleware<T>[] | Next<T>;
+    handler: Next<T>;
     name: string | null;
     path: string | null;
     subdomain: string | null;

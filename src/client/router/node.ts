@@ -15,7 +15,7 @@ class Node<T> {
         let node: Node<T> = this,
             segments = path.split('/');
 
-        for (let i = 0, n = segments.length; i < n; i++) {
+        for (let i = segments[0] === '' ? 1 : 0, n = segments.length; i < n; i++) {
             let segment = segments[i],
                 symbol = segment[0];
 
@@ -62,16 +62,15 @@ class Node<T> {
         let node: Node<T> | undefined = this,
             parameters: Record<string, string> | undefined,
             segments = path.split('/'),
-            wildcard: { node: Node<T>, start: number } | undefined;
+            wildcardNode: Node<T> | undefined,
+            wildcardStart = 0;
 
-        for (let i = 0, n = segments.length; i < n; i++) {
+        for (let i = segments[0] === '' ? 1 : 0, n = segments.length; i < n; i++) {
             let segment = segments[i];
 
             if (node.wildcard) {
-                wildcard = {
-                    node: node.wildcard,
-                    start: i
-                };
+                wildcardNode = node.wildcard;
+                wildcardStart = i;
             }
 
             // Exact matches take precedence over parameters
@@ -91,9 +90,9 @@ class Node<T> {
             (parameters ??= {})[node.name!] = segment;
         }
 
-        if ((node === undefined || node.route === null) && wildcard) {
-            node = wildcard.node;
-            (parameters ??= {})[ node.name! ] = segments.slice(wildcard.start).join('/');
+        if ((node === undefined || node.route === null) && wildcardNode) {
+            node = wildcardNode;
+            (parameters ??= {})[ node.name! ] = segments.slice(wildcardStart).join('/');
         }
 
         return {
