@@ -82,7 +82,7 @@ class Node<T> {
                 continue;
             }
 
-            if (!node.parameter) {
+            if (!node.parameter || segment === '') {
                 node = undefined;
                 break;
             }

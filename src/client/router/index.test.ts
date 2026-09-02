@@ -149,7 +149,7 @@ describe('Router', () => {
         it('expands optional parameters', () => {
             let router = new Router<string>();
 
-            router.on(['GET'], { path: '/users?:id', responder: responder('users') });
+            router.on(['GET'], { path: '/users/?:id', responder: responder('users') });
 
             let base = router.match('GET', '/users'),
                 withParam = router.match('GET', '/users/42');
@@ -181,7 +181,7 @@ describe('Router', () => {
         it('expands multiple optional parameters', () => {
             let router = new Router<string>();
 
-            router.on(['GET'], { path: '/items?:a?:b', responder: responder('items') });
+            router.on(['GET'], { path: '/items/?:a/?:b', responder: responder('items') });
 
             let base = router.match('GET', '/items'),
                 oneParam = router.match('GET', '/items/x'),
@@ -428,6 +428,83 @@ describe('Router', () => {
 
             expect(deleteResult.route).toBeDefined();
             expect(getResult.route).toBeUndefined();
+        });
+    });
+
+
+    describe('phase 1 fixes', () => {
+        it('round-trips canonical optional path (B1)', () => {
+            let router = new Router<string>();
+
+            router.get({ name: 'users', path: '/users/?:id', responder: responder('users') });
+
+            expect(router.match('GET', '/users').route).toBeDefined();
+            expect(router.match('GET', '/users/42').route).toBeDefined();
+            expect(router.match('GET', '/users/42').parameters).toEqual({ id: '42' });
+            expect((router as any).uri('users', { id: 42 })).toBe('/users/42');
+            expect((router as any).uri('users')).toBe('/users');
+        });
+
+        it('round-trips multiple optional segments (B1)', () => {
+            let router = new Router<string>();
+
+            router.get({ name: 'items', path: '/items/?:a/?:b', responder: responder('items') });
+
+            expect(router.match('GET', '/items').route).toBeDefined();
+            expect(router.match('GET', '/items/x').parameters).toEqual({ a: 'x' });
+            expect(router.match('GET', '/items/x/y').parameters).toEqual({ a: 'x', b: 'y' });
+            expect((router as any).uri('items', { a: 'x', b: 'y' })).toBe('/items/x/y');
+            expect((router as any).uri('items', { a: 'x' })).toBe('/items/x');
+        });
+
+        it('inner subdomain overrides the group subdomain (B5)', () => {
+            let router = new Router<string>();
+
+            router.group({ subdomain: 'api' }).routes((r) => {
+                r.get({ path: '/v1', responder: responder('v1'), subdomain: 'v1' });
+            });
+
+            let inner = router.match('GET', '/v1', 'v1'),
+                outer = router.match('GET', '/v1', 'api');
+
+            expect(inner.route).toBeDefined();
+            expect(outer.route).toBeUndefined();
+        });
+
+        it('dedupes subdomains and stores longest-first (B6)', () => {
+            let router = new Router<string>();
+
+            router.group({ subdomain: 'api' }).routes((r) => {
+                r.get({ path: '/a', responder: responder('a') });
+                r.get({ path: '/b', responder: responder('b') });
+                r.get({ path: '/c', responder: responder('c') });
+            });
+
+            router.get({ path: '/d', responder: responder('d'), subdomain: 'api-v2' });
+
+            expect(router.subdomains).toEqual(['api-v2', 'api']);
+        });
+
+        it('pops the group stack when the callback throws (B8)', () => {
+            let router = new Router<string>();
+
+            expect(() => {
+                router.group({ path: '/api' }).routes(() => {
+                    throw new Error('boom');
+                });
+            }).toThrow('boom');
+
+            expect(router.groups.length).toBe(0);
+        });
+
+        it('does not capture an empty segment as a parameter (B9)', () => {
+            let router = new Router<string>();
+
+            router.get({ path: '/a/:x', responder: responder('a') });
+
+            let result = router.match('GET', '/a//');
+
+            expect(result.route).toBeUndefined();
         });
     });
 });

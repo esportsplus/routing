@@ -43,7 +43,7 @@ function set<T>(route: Route<T>, options: Options<T> | RouteOptions<T>) {
     }
 
     if (options.subdomain) {
-        route.subdomain = (route.subdomain || '') + options.subdomain;
+        route.subdomain = options.subdomain;
     }
 }
 
@@ -140,8 +140,14 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
         return {
             routes: (fn: (router: Router<T, TRoutes>) => void) => {
                 this.groups.push(options);
-                fn(this);
-                this.groups.pop();
+
+                try {
+                    fn(this);
+                }
+                finally {
+                    this.groups.pop();
+                }
+
                 return this;
             }
         };
@@ -197,16 +203,23 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
             for (let i = 0, n = methods.length; i < n; i++) {
                 let method = methods[i];
 
-                if (path.indexOf('?:') !== -1) {
-                    let segments = path.split('?:'),
-                        url = segments[0];
+                if (path.indexOf('/?:') !== -1) {
+                    let segments = path.split('/'),
+                        url = '';
+
+                    for (let j = 0, m = segments.length; j < m; j++) {
+                        let segment = segments[j];
+
+                        if (segment[0] === '?') {
+                            this.add(method, url || '/', route);
+                            url += '/:' + segment.slice(2);
+                        }
+                        else if (segment) {
+                            url += '/' + segment;
+                        }
+                    }
 
                     this.add(method, url, route);
-
-                    for (let i = 1; i < segments.length; i++) {
-                        url += '/:' + segments[i];
-                        this.add(method, url, route);
-                    }
                 }
                 else {
                     this.add(method, path, route);
@@ -215,7 +228,13 @@ class Router<T, TRoutes extends RouteRegistry = {}> {
         }
 
         if (subdomain) {
-            (this.subdomains ??= []).push( subdomain.toLowerCase() );
+            let subdomains = this.subdomains ??= [],
+                value = subdomain.toLowerCase();
+
+            if (subdomains.indexOf(value) === -1) {
+                subdomains.push(value);
+                subdomains.sort((a, b) => b.length - a.length);
+            }
         }
 
         return this as any;
