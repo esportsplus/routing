@@ -87,7 +87,7 @@ app.uri('files', { path: ['a', 'b'] });
 app.uri('user');
 // @ts-expect-error required parameter missing from object (B2)
 app.uri('user', {});
-// @ts-expect-error unknown route name (B11)
+// @ts-expect-error missing route name (B11)
 app.uri('missing');
 // @ts-expect-error wildcard parameter is required (B12)
 app.uri('files');
@@ -128,14 +128,14 @@ router(
 );
 
 router(
-    (r) => r.get({ name: 'home', path: '/a', responder: noop }),
     // @ts-expect-error duplicate route name between route factories
+    (r) => r.get({ name: 'home', path: '/a', responder: noop }),
     (r) => r.get({ name: 'home', path: '/b', responder: noop })
 );
 
 router(
-    (r) => r.get({ path: '/shared', responder: noop }),
     // @ts-expect-error duplicate path between route factories
+    (r) => r.get({ path: '/shared', responder: noop }),
     (r) => r.get({ path: '/shared', responder: noop })
 );
 
@@ -252,4 +252,3 @@ let budget = router(
 budget.uri('a02', { id: 1 });
 budget.uri('e15', { page: 2 });
 budget.uri('c07', { rest: ['x', 'y'] });
-

@@ -5,8 +5,8 @@ import { Router } from './router';
 type PACKAGE_NAME = '@esportsplus/routing';
 
 
-type AccumulateRoutes<Factories extends readonly RouteFactory<any>[]> =
-    Factories extends readonly [infer F extends RouteFactory<any>, ...infer Rest extends readonly RouteFactory<any>[]]
+type AccumulateRoutes<Factories extends readonly RouteFactory<Value>[]> =
+    Factories extends readonly [infer F extends RouteFactory<Value>, ...infer Rest extends readonly RouteFactory<Value>[]]
         ? MergeRegistry<RegistryOf<F>, AccumulateRoutes<Rest>>
         : EmptyRegistry;
 
@@ -149,8 +149,8 @@ type PathParamsObject<Path extends string> =
     { [K in ExtractWildcardParams<Path>]: string | number | (string | number)[] };
 
 type PathsConflict<A extends string, B extends string> =
-    (A extends any
-        ? B extends any
+    (A extends A
+        ? B extends B
             ? Eq<A extends `${infer Bk}|/${string}` ? Bk : never, B extends `${infer Bk}|/${string}` ? Bk : never> extends true
                 ? ConflictWalk<A extends `${string}|/${infer P}` ? `/${P}` : never, B extends `${string}|/${infer P}` ? `/${P}` : never> extends true
                     ? true
@@ -158,13 +158,6 @@ type PathsConflict<A extends string, B extends string> =
                 : never
             : never
         : never) extends never ? false : true;
-
-type PriorRegistry<Factories extends readonly RouteFactory<any>[], I extends PropertyKey, Acc extends Registry = EmptyRegistry, Idx extends readonly unknown[] = []> =
-    `${Idx['length']}` extends I
-        ? Acc
-        : Factories[Idx['length']] extends infer F extends RouteFactory<any>
-            ? PriorRegistry<Factories, I, MergeRegistry<Acc, RegistryOf<F>>, [...Idx, unknown]>
-            : Acc;
 
 type Register<T, TRegistry extends Registry, TGroup extends Group, Method extends string, Name extends string, Sub extends string, Path extends string> =
     Router<T, {
@@ -292,11 +285,16 @@ type UriArguments<TRegistry extends Registry, Name extends keyof TRegistry['name
             : [params: PathParamsObject<P>]
         : [];
 
-type ValidateFactories<Factories extends readonly RouteFactory<any>[]> = {
-    [I in keyof Factories]: RegistryConflict<PriorRegistry<Factories, I>, RegistryOf<Factories[I]>> extends ''
-        ? Factories[I]
-        : RegistryConflict<PriorRegistry<Factories, I>, RegistryOf<Factories[I]>>;
-};
+type ValidateFactories<Factories extends readonly RouteFactory<Value>[], Acc extends Registry = EmptyRegistry> =
+    number extends Factories['length']
+        ? Factories
+        : Factories extends readonly [infer Factory extends RouteFactory<Value>, ...infer Rest extends readonly RouteFactory<Value>[]]
+            ? RegistryConflict<Acc, RegistryOf<Factory>> extends ''
+                ? [Factory, ...ValidateFactories<Rest, MergeRegistry<Acc, RegistryOf<Factory>>>]
+                : [Factory & RegistryConflict<Acc, RegistryOf<Factory>>, ...Rest]
+            : [];
+
+type Value = {} | null | undefined;
 
 type ValidateName<TRegistry extends Registry, TGroup extends Group, Name extends string> =
     string extends Name
@@ -334,5 +332,6 @@ export type {
     Registry,
     Request, RequestState, Root, Route, Router, RouteFactory, RouteOptions, RouteSubdomain,
     UriArguments,
-    ValidateFactories, ValidateName, ValidatePath
+    ValidateFactories, ValidateName, ValidatePath,
+    Value
 };

@@ -296,10 +296,10 @@ describe('Node', () => {
             root.add('items/:id', rParam);
             root.add('items/known', rStatic);
 
-            let result = root.find('items/unknown-value');
+            let result = root.find('items/unrecognized-value');
 
             expect(result.route).toBe(rParam);
-            expect(result.parameters).toEqual({ id: 'unknown-value' });
+            expect(result.parameters).toEqual({ id: 'unrecognized-value' });
         });
     });
 });

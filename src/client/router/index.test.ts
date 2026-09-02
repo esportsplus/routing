@@ -189,7 +189,7 @@ describe('Router', () => {
 
             router.get({ name: 'home', path: '/home', responder: responder('home') });
 
-            let uri = (router as any).uri('home');
+            let uri = router.get({ name: 'home', path: '/home', responder: responder('home') }).uri('home');
 
             expect(uri).toBe('/home');
         });
@@ -199,7 +199,7 @@ describe('Router', () => {
 
             router.get({ name: 'user', path: '/users/:id', responder: responder('user') });
 
-            let uri = (router as any).uri('user', [42]);
+            let uri = router.get({ name: 'user', path: '/users/:id', responder: responder('user') }).uri('user', { id: 42 });
 
             expect(uri).toBe('/users/42');
         });
@@ -209,7 +209,7 @@ describe('Router', () => {
 
             router.get({ name: 'users', path: '/users/?:id', responder: responder('users') });
 
-            let uri = (router as any).uri('users', [7]);
+            let uri = router.get({ name: 'users', path: '/users/?:id', responder: responder('users') }).uri('users', { id: 7 });
 
             expect(uri).toBe('/users/7');
         });
@@ -219,7 +219,7 @@ describe('Router', () => {
 
             router.get({ name: 'users', path: '/users/?:id', responder: responder('users') });
 
-            let uri = (router as any).uri('users');
+            let uri = router.get({ name: 'users', path: '/users/?:id', responder: responder('users') }).uri('users');
 
             expect(uri).toBe('/users');
         });
@@ -229,7 +229,7 @@ describe('Router', () => {
 
             router.get({ name: 'files', path: '/files/*:path', responder: responder('files') });
 
-            let uri = (router as any).uri('files', ['docs', 'readme.txt']);
+            let uri = router.get({ name: 'files', path: '/files/*:path', responder: responder('files') }).uri('files', { path: ['docs', 'readme.txt'] });
 
             expect(uri).toBe('/files/docs/readme.txt');
         });
@@ -239,7 +239,7 @@ describe('Router', () => {
 
             router.get({ name: 'user', path: '/users/:id', responder: responder('user') });
 
-            let uri = (router as any).uri('user', { id: 42 });
+            let uri = router.get({ name: 'user', path: '/users/:id', responder: responder('user') }).uri('user', { id: 42 });
 
             expect(uri).toBe('/users/42');
         });
@@ -249,7 +249,7 @@ describe('Router', () => {
 
             router.get({ name: 'users', path: '/users/?:id', responder: responder('users') });
 
-            let uri = (router as any).uri('users', { id: 7 });
+            let uri = router.get({ name: 'users', path: '/users/?:id', responder: responder('users') }).uri('users', { id: 7 });
 
             expect(uri).toBe('/users/7');
         });
@@ -259,7 +259,7 @@ describe('Router', () => {
 
             router.get({ name: 'users', path: '/users/?:id', responder: responder('users') });
 
-            let uri = (router as any).uri('users', {});
+            let uri = router.get({ name: 'users', path: '/users/?:id', responder: responder('users') }).uri('users', {});
 
             expect(uri).toBe('/users');
         });
@@ -269,7 +269,7 @@ describe('Router', () => {
 
             router.get({ name: 'files', path: '/files/*:path', responder: responder('files') });
 
-            let uri = (router as any).uri('files', { path: ['docs', 'readme.txt'] });
+            let uri = router.get({ name: 'files', path: '/files/*:path', responder: responder('files') }).uri('files', { path: ['docs', 'readme.txt'] });
 
             expect(uri).toBe('/files/docs/readme.txt');
         });
@@ -410,8 +410,10 @@ describe('Router', () => {
             expect(router.match('GET', '/users').route).toBeDefined();
             expect(router.match('GET', '/users/42').route).toBeDefined();
             expect(router.match('GET', '/users/42').parameters).toEqual({ id: '42' });
-            expect((router as any).uri('users', { id: 42 })).toBe('/users/42');
-            expect((router as any).uri('users')).toBe('/users');
+            let typed = router.get({ name: 'typed-users', path: '/users/?:id', responder: responder('users') });
+
+            expect(typed.uri('typed-users', { id: 42 })).toBe('/users/42');
+            expect(typed.uri('typed-users')).toBe('/users');
         });
 
         it('round-trips multiple optional segments (B1)', () => {
@@ -422,8 +424,10 @@ describe('Router', () => {
             expect(router.match('GET', '/items').route).toBeDefined();
             expect(router.match('GET', '/items/x').parameters).toEqual({ a: 'x' });
             expect(router.match('GET', '/items/x/y').parameters).toEqual({ a: 'x', b: 'y' });
-            expect((router as any).uri('items', { a: 'x', b: 'y' })).toBe('/items/x/y');
-            expect((router as any).uri('items', { a: 'x' })).toBe('/items/x');
+            let typed = router.get({ name: 'typed-items', path: '/items/?:a/?:b', responder: responder('items') });
+
+            expect(typed.uri('typed-items', { a: 'x', b: 'y' })).toBe('/items/x/y');
+            expect(typed.uri('typed-items', { a: 'x' })).toBe('/items/x');
         });
 
         it('inner subdomain overrides the group subdomain (B5)', () => {

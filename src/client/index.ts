@@ -1,11 +1,10 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
-import { AccumulateRoutes, ClientRedirect, ClientUri, EmptyRegistry, Group, InferOutput, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Root, Route, RouteFactory, ValidateFactories } from './types';
+import { AccumulateRoutes, ClientRedirect, ClientUri, EmptyRegistry, Group, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Root, Route, RouteFactory, ValidateFactories, Value } from './types';
 import { Router } from './router';
 import { PACKAGE_NAME } from './constants';
 
 
-let location = window.location,
-    requests: RequestState[] = [];
+let requests: RequestState[] = [];
 
 
 function back() {
@@ -30,7 +29,8 @@ function forward() {
 }
 
 function href<T>() {
-    let request = {
+    let location = window.location,
+        request = {
             hostname: location.hostname,
             href: location.href,
             method: 'GET',
@@ -56,13 +56,14 @@ function href<T>() {
 function listener(event: MouseEvent) {
     let anchor = (event.target as Element | null)?.closest('a');
 
-    if (!anchor) {
+    if (!anchor || event.defaultPrevented) {
         return;
     }
 
     if (
         event.altKey || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey ||
-        anchor.hasAttribute('download') || anchor.origin !== location.origin || anchor.target === '_blank'
+        anchor.hasAttribute('download') || anchor.origin !== window.location.origin ||
+        (anchor.target && anchor.target !== '_self')
     ) {
         return;
     }
@@ -78,11 +79,12 @@ function match<T>(request: Request<T>, router: Router<T, Registry, Group>, subdo
             subdomains = router.subdomains;
 
         for (let i = 0, n = subdomains.length; i < n; i++) {
-            if (!hostname.startsWith(subdomains[i])) {
+            if (!hostname.startsWith(subdomains[i] + '.')) {
                 continue;
             }
 
             subdomain = subdomains[i];
+            request.subdomain = subdomain;
             break;
         }
     }
@@ -112,14 +114,14 @@ function middleware<T>(request: Request<T>, router: Router<T, Registry, Group>) 
     };
 
     host.match = (fallback: Route<T>) => {
+        if (fallback === undefined) {
+            throw new Error(`${PACKAGE_NAME}: fallback route does not exist`);
+        }
+
         let state = reactive<ReturnType<typeof router.match>>({
                 parameters: undefined,
                 route: undefined
             });
-
-        if (fallback === undefined) {
-            throw new Error(`${PACKAGE_NAME}: fallback route does not exist`);
-        }
 
         effect(() => {
             let { parameters, route } = match(request, router);
@@ -165,9 +167,9 @@ function update() {
 }
 
 
-const router = <const Factories extends readonly RouteFactory<any>[]>(...factories: ValidateFactories<Factories>) => {
+const router = <const Factories extends readonly RouteFactory<Value>[]>(...factories: Factories & ValidateFactories<Factories>) => {
     type Routes = AccumulateRoutes<Factories>;
-    type T = InferOutput<Factories[number]>;
+    type T = Value;
 
     let instance = factories.reduce(
             (router, factory) => factory(router as Router<T, EmptyRegistry, Root>),
@@ -179,7 +181,7 @@ const router = <const Factories extends readonly RouteFactory<any>[]>(...factori
         window.addEventListener('popstate', update);
     }
 
-    let uri = instance.uri as (name: string, params?: PathParamsObject<string>) => string;
+    let uri = instance.uri.bind(instance) as (name: string, params?: PathParamsObject<string>) => string;
 
     return {
         back,
