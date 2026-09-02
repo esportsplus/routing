@@ -4,3 +4,4 @@
 # of waiting out the release-age cutoff.
 minimumReleaseAgeExclude:
   - '@esportsplus/*'
+  - happy-dom@20.13.2
