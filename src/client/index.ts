@@ -183,6 +183,17 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
             window.history.pushState(null, '', uri(name, params));
             update();
         }) as ClientRedirect<Routes>,
+        shutdown: () => {
+            let index = requests.indexOf(request);
+
+            if (index !== -1) {
+                requests.splice(index, 1);
+            }
+
+            if (requests.length === 0) {
+                window.removeEventListener('popstate', update);
+            }
+        },
         uri: instance.uri as ClientUri<Routes>
     };
 };
