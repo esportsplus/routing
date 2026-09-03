@@ -1,7 +1,7 @@
 {
     "author": "ICJR",
     "dependencies": {
-        "@esportsplus/reactivity": "^0.34.0",
+        "@esportsplus/reactivity": "^0.36.1",
         "@esportsplus/utilities": "^0.28.0",
         "@types/node": "^26.4.1"
     },
@@ -21,7 +21,7 @@
         "url": "https://github.com/esportsplus/routing"
     },
     "scripts": {
-        "build": "tsc",
+        "build": "tsc -p tsconfig.build.json",
         "test": "vitest run",
         "-": "-",
         "prepare": "pnpm build",
@@ -29,7 +29,7 @@
     },
     "type": "module",
     "devDependencies": {
-        "@esportsplus/typescript": "^0.32.0",
+        "@esportsplus/typescript": "^0.33.2",
         "happy-dom": "^20.13.2",
         "vitest": "^4.1.11"
     },
