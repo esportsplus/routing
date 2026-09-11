@@ -3,9 +3,9 @@
 # reactivity (or any of our own packages) be consumed immediately instead
 # of waiting out the release-age cutoff.
 minimumReleaseAgeExclude:
-  - '@esportsplus/reactivity@0.36.4'
+  - '@esportsplus/reactivity@0.36.4 || 0.36.5'
   - '@esportsplus/utilities@0.28.3'
-  - '@esportsplus/typescript@0.34.1'
+  - '@esportsplus/typescript@0.34.1 || 0.34.2'
   - '@esportsplus/*'
   - happy-dom@20.13.2 || 20.14.0
   - tsc-alias@1.9.4
