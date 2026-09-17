@@ -1,6 +1,6 @@
-import { Request } from '../types';
+import { Request } from '../../../src/client/types';
 import { describe, expect, it } from 'vitest';
-import { Router } from './index';
+import { Router } from '../../../src/client/router/index';
 
 
 type Mw = (input: Request<string>, next: Responder) => string;

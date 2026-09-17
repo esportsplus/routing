@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from 'vitest';
-import { router } from './index';
-import type { Request, Route, Router } from './types';
+import { router } from '../../src/client/index';
+import type { Request, Route, Router } from '../../src/client/types';
 
 
 function fallback(request: Request<string>): string {

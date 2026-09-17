@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Node } from './node';
+import { Node } from '../../../src/client/router/node';
 
 
 type MockRoute = { handler: () => string; name: string; path: null; subdomain: null };

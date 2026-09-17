@@ -1,6 +1,6 @@
-import { router } from './index';
-import type { Middleware } from './types';
-import { Router } from './router';
+import { router } from '../../src/client/index';
+import type { Middleware } from '../../src/client/types';
+import { Router } from '../../src/client/router';
 
 
 let noop = () => 'x';
