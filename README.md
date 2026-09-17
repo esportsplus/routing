@@ -237,6 +237,14 @@ app.get('*', (_req, res) => res.sendFile(path.resolve('dist/index.html')));
 Keep the fallback below your static-asset and API handlers so real files and
 endpoints are served directly and only client routes fall through to the shell.
 
+## Type-safety notes
+
+The client router's inferred types are engineered so a downstream package that emits `.d.ts` (`"declaration": true`) can name everything through the public `@esportsplus/routing/client` entry. Two consumer patterns are intentionally unsupported:
+
+- **Do not extract a bare builder method**, e.g. `const get = router().get`. Builder methods read `this`, so an unbound reference throws at call time; there is no supported use for it, and its isolated type is not part of the public surface.
+- **Re-export the router by name, not by value alias.** Use `export { router } from '@esportsplus/routing/client'`. Avoid `export const myRouter = router`, which forces the compiler to serialize the generic factory signature into your declarations.
+
+
 ## License
 
 MIT

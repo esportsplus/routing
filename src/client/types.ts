@@ -6,7 +6,7 @@ import type { Router } from './router';
 type AccumulateRoutes<Factories extends readonly RouteFactory<T>[], T> =
     Factories extends readonly [infer F extends RouteFactory<T>, ...infer Rest extends readonly RouteFactory<T>[]]
         ? MergeRegistry<RegistryOf<F>, AccumulateRoutes<Rest, T>>
-        : EmptyRegistry;
+        : { names: {}; paths: never };
 
 type Bucket<Method extends string, Sub extends string> =
     `${Method}|${Uppercase<Sub extends 'www' ? '' : Sub>}`;
@@ -52,8 +52,6 @@ type DuplicatePath<TRegistry extends Registry, TGroup extends Group, Method exte
         : Extract<`${Bucket<Method, Sub extends '' ? TGroup['subdomain'] : Sub>}|${Shape<FullPath<TGroup, Path>>}`, ShapeKeysOfPaths<TRegistry['paths']>> extends never
             ? ''
             : `${typeof PACKAGE_NAME}: path '${FullPath<TGroup, Path>}' is already registered for ${Method}`;
-
-type EmptyRegistry = { names: {}; paths: never };
 
 type Eq<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
@@ -155,12 +153,6 @@ type PathsConflict<A extends string, B extends string> =
             : never
         : never) extends never ? false : true;
 
-type Register<T, TRegistry extends Registry, TGroup extends Group, Method extends string, Name extends string, Sub extends string, Path extends string> =
-    Router<T, {
-        names: TRegistry['names'] & RegisterNames<TGroup, Name, Path>;
-        paths: TRegistry['paths'] | RegisterPaths<TGroup, Method, Sub extends '' ? TGroup['subdomain'] : Sub, Path>;
-    }, TGroup>;
-
 type RegisterNames<TGroup extends Group, Name extends string, Path extends string> =
     string extends Name
         ? {}
@@ -190,9 +182,9 @@ type RegistryConflict<A extends Registry, B extends Registry> =
         : `${typeof PACKAGE_NAME}: duplicate route name between route factories`;
 
 type RegistryOf<F> =
-    F extends (router: Router<infer _T, EmptyRegistry, Root>) => Router<infer _U, infer R extends Registry, infer _G extends Group>
+    F extends (router: Router<infer _T, { names: {}; paths: never }, { name: ''; path: ''; subdomain: '' }>) => Router<infer _U, infer R extends Registry, infer _G extends Group>
         ? R
-        : EmptyRegistry;
+        : { names: {}; paths: never };
 
 type Request<T> = RequestState & {
     data: ReturnType<Router<T>['match']>;
@@ -210,8 +202,6 @@ type RequestState = {
     query: Record<string, string>;
 };
 
-type Root = { name: ''; path: ''; subdomain: '' };
-
 type Route<T> = {
     handler: Next<T>;
     name: string | null;
@@ -219,7 +209,7 @@ type Route<T> = {
     subdomain: string | null;
 };
 
-type RouteFactory<T> = (router: Router<T, EmptyRegistry, Root>) => Router<T, Registry, Group>;
+type RouteFactory<T> = (router: Router<T, { names: {}; paths: never }, { name: ''; path: ''; subdomain: '' }>) => Router<T, Registry, Group>;
 
 type RouteOptions<T> = Options<T> & {
     responder: Next<T>;
@@ -279,7 +269,7 @@ type UriArguments<TRegistry extends Registry, Name extends keyof TRegistry['name
             : [params: PathParamsObject<P>]
         : [];
 
-type ValidateFactories<Factories extends readonly RouteFactory<T>[], T, Acc extends Registry = EmptyRegistry> =
+type ValidateFactories<Factories extends readonly RouteFactory<T>[], T, Acc extends Registry = { names: {}; paths: never }> =
     number extends Factories['length']
         ? Factories
         : Factories extends readonly [infer Factory extends RouteFactory<T>, ...infer Rest extends readonly RouteFactory<T>[]]
@@ -314,16 +304,15 @@ type ValidatePath<TRegistry extends Registry, TGroup extends Group, Method exten
 export type {
     AccumulateRoutes,
     ClientRedirect, ClientUri,
-    EmptyRegistry,
     Group,
     MergeGroup,
     Middleware,
     Next,
     Options,
     PathParamsObject,
-    Register,
+    RegisterNames, RegisterPaths,
     Registry,
-    Request, RequestState, Root, Route, Router, RouteFactory, RouteOptions,
+    Request, RequestState, Route, Router, RouteFactory, RouteOptions,
     UriArguments,
     ValidateFactories, ValidateName, ValidatePath
 };

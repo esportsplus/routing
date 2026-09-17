@@ -1,6 +1,6 @@
 import { ON_DELETE, ON_GET, ON_POST, ON_PUT, PACKAGE_NAME } from '../constants';
 import { Node } from './node';
-import type { EmptyRegistry, Group, MergeGroup, Middleware, Next, Options, Register, Registry, Request, Root, Route, RouteOptions, UriArguments, ValidateName, ValidatePath } from '../types';
+import type { Group, MergeGroup, Middleware, Next, Options, RegisterNames, RegisterPaths, Registry, Request, Route, RouteOptions, UriArguments, ValidateName, ValidatePath } from '../types';
 
 
 const build = <T>(stages: Middleware<T>[]): Next<T> => {
@@ -55,7 +55,7 @@ function set<T>(state: { name: string | null; path: string | null; subdomain: st
 }
 
 
-class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group = Root> {
+class Router<T, TRegistry extends Registry = { names: {}; paths: never }, TGroup extends Group = { name: ''; path: ''; subdomain: '' }> {
     bucket: Record<string, Record<string, { root: Node<T>, static: Record<string, Route<T>> }>> = {};
     groups: Options<T>[] = [];
     routes: Record<string, Route<T>> = {};
@@ -167,23 +167,37 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
         options: RouteOptions<T>
             & { name?: Name; path?: Path; subdomain?: Sub }
             & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'DELETE', Sub, Path> }
-    ): Register<T, TRegistry, TGroup, 'DELETE', Name, Sub, Path> {
+    ): Router<T, {
+        names: TRegistry['names'] & RegisterNames<TGroup, Name, Path>;
+        paths: TRegistry['paths'] | RegisterPaths<TGroup, 'DELETE', Sub extends '' ? TGroup['subdomain'] : Sub, Path>;
+    }, TGroup> {
         this.register(ON_DELETE, options);
-        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'DELETE', Name, Sub, Path>;
+        return this.as();
     }
 
     get<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
         options: RouteOptions<T>
             & { name?: Name; path?: Path; subdomain?: Sub }
             & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'GET', Sub, Path> }
-    ): Register<T, TRegistry, TGroup, 'GET', Name, Sub, Path> {
+    ): Router<T, {
+        names: TRegistry['names'] & RegisterNames<TGroup, Name, Path>;
+        paths: TRegistry['paths'] | RegisterPaths<TGroup, 'GET', Sub extends '' ? TGroup['subdomain'] : Sub, Path>;
+    }, TGroup> {
         this.register(ON_GET, options);
-        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'GET', Name, Sub, Path>;
+        return this.as();
     }
 
     group<const G extends Partial<Group>>(options: Options<T> & G): {
-        routes: <R extends Registry = TRegistry>(
-            fn: (router: Router<T, TRegistry, MergeGroup<TGroup, G>>) => Router<T, R, MergeGroup<TGroup, G>> | void
+        routes: <R extends { names: Record<string, { path: string }>; paths: string } = TRegistry>(
+            fn: (router: Router<T, TRegistry, {
+                name: `${TGroup['name']}${G extends { name: infer N extends string } ? N : ''}`;
+                path: `${TGroup['path']}${G extends { path: infer P extends string } ? P : ''}`;
+                subdomain: G extends { subdomain: infer S extends string } ? '' extends S ? TGroup['subdomain'] : S : TGroup['subdomain'];
+            }>) => Router<T, R, {
+                name: `${TGroup['name']}${G extends { name: infer N extends string } ? N : ''}`;
+                path: `${TGroup['path']}${G extends { path: infer P extends string } ? P : ''}`;
+                subdomain: G extends { subdomain: infer S extends string } ? '' extends S ? TGroup['subdomain'] : S : TGroup['subdomain'];
+            }> | void
         ) => Router<T, R, TGroup>;
     } {
         return {
@@ -226,27 +240,36 @@ class Router<T, TRegistry extends Registry = EmptyRegistry, TGroup extends Group
         options: RouteOptions<T>
             & { name?: Name; path?: Path; subdomain?: Sub }
             & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, Methods[number], Sub, Path> }
-    ): Register<T, TRegistry, TGroup, Methods[number], Name, Sub, Path> {
+    ): Router<T, {
+        names: TRegistry['names'] & RegisterNames<TGroup, Name, Path>;
+        paths: TRegistry['paths'] | RegisterPaths<TGroup, Methods[number], Sub extends '' ? TGroup['subdomain'] : Sub, Path>;
+    }, TGroup> {
         this.register(methods, options);
-        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, Methods[number], Name, Sub, Path>;
+        return this.as();
     }
 
     post<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
         options: RouteOptions<T>
             & { name?: Name; path?: Path; subdomain?: Sub }
             & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'POST', Sub, Path> }
-    ): Register<T, TRegistry, TGroup, 'POST', Name, Sub, Path> {
+    ): Router<T, {
+        names: TRegistry['names'] & RegisterNames<TGroup, Name, Path>;
+        paths: TRegistry['paths'] | RegisterPaths<TGroup, 'POST', Sub extends '' ? TGroup['subdomain'] : Sub, Path>;
+    }, TGroup> {
         this.register(ON_POST, options);
-        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'POST', Name, Sub, Path>;
+        return this.as();
     }
 
     put<const Name extends string = '', const Path extends string = string, const Sub extends string = ''>(
         options: RouteOptions<T>
             & { name?: Name; path?: Path; subdomain?: Sub }
             & { name?: ValidateName<TRegistry, TGroup, Name>; path?: ValidatePath<TRegistry, TGroup, 'PUT', Sub, Path> }
-    ): Register<T, TRegistry, TGroup, 'PUT', Name, Sub, Path> {
+    ): Router<T, {
+        names: TRegistry['names'] & RegisterNames<TGroup, Name, Path>;
+        paths: TRegistry['paths'] | RegisterPaths<TGroup, 'PUT', Sub extends '' ? TGroup['subdomain'] : Sub, Path>;
+    }, TGroup> {
         this.register(ON_PUT, options);
-        return this.as<Registry, TGroup>() as Register<T, TRegistry, TGroup, 'PUT', Name, Sub, Path>;
+        return this.as();
     }
 
     uri<Name extends keyof TRegistry['names'] & string>(name: Name, ...values: UriArguments<TRegistry, Name>): string {

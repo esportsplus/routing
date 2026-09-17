@@ -1,7 +1,7 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
 import { PACKAGE_NAME } from './constants';
 import { build, Router } from './router';
-import type { AccumulateRoutes, ClientRedirect, ClientUri, EmptyRegistry, Group, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Root, Route, RouteFactory, ValidateFactories } from './types';
+import type { AccumulateRoutes, ClientRedirect, ClientUri, Group, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Route, RouteFactory, ValidateFactories } from './types';
 
 
 let requests: RequestState[] = [];
@@ -158,9 +158,9 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
     type Routes = AccumulateRoutes<Factories, T>;
 
     let instance = factories.reduce(
-            (router, factory) => factory(router as Router<T, EmptyRegistry, Root>),
-            new Router<T, EmptyRegistry, Root>() as Router<T, Registry, Root>
-        ) as Router<T, Routes, Root>,
+            (router, factory) => factory(router as Router<T, { names: {}; paths: never }, { name: ''; path: ''; subdomain: '' }>),
+            new Router<T, { names: {}; paths: never }, { name: ''; path: ''; subdomain: '' }>() as Router<T, Registry, { name: ''; path: ''; subdomain: '' }>
+        ) as Router<T, Routes, { name: ''; path: ''; subdomain: '' }>,
         request = reactive<Request<T>>(Object.assign(href<T>(), { data: { parameters: undefined, route: undefined } }));
 
     if (requests.push(request) === 1) {
@@ -201,6 +201,7 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
 
 export { router };
 export type {
+    ClientRedirect, ClientUri,
     Middleware,
     Next,
     Request, Route, Router, RouteFactory
