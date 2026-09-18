@@ -1,10 +1,10 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
 import { PACKAGE_NAME } from './constants';
 import { build, Router } from './router';
-import type { AccumulateRoutes, ClientRedirect, ClientUri, Group, Middleware, Next, PathParamsObject, Registry, Request, RequestState, Route, RouteFactory, ValidateFactories } from './types';
+import type { AccumulateRoutes, ClientRedirect, ClientUri, Group, Middleware, Next, PathParamsObject, Registry, Request, Route, RouteFactory, ValidateFactories } from './types';
 
 
-let requests: RequestState[] = [];
+let requests: Omit<Request<unknown>, 'data' | 'subdomain'>[] = [];
 
 
 function back() {
@@ -105,7 +105,7 @@ function middleware<T>(request: Request<T>, router: Router<T, Registry, Group>) 
             throw new Error(`${PACKAGE_NAME}: fallback route does not exist`);
         }
 
-        let state = reactive<ReturnType<typeof router.match>>({
+        let matching = reactive<ReturnType<typeof router.match>>({
                 parameters: undefined,
                 route: undefined
             });
@@ -113,19 +113,22 @@ function middleware<T>(request: Request<T>, router: Router<T, Registry, Group>) 
         effect(() => {
             let { parameters, route } = match(request, router);
 
-            state.parameters = parameters;
-            state.route = route || fallback;
+            matching.parameters = parameters;
+            matching.route = route || fallback;
         });
 
         return (request: Request<T>, next: Next<T>) => {
-            if (state.route === undefined) {
+            let parameters = matching.parameters,
+                route = matching.route;
+
+            if (route === undefined) {
                 throw new Error(`${PACKAGE_NAME}: route is undefined`);
             }
 
             return root(() => {
                 request.data = {
-                    parameters: state.parameters,
-                    route: state.route
+                    parameters,
+                    route
                 };
 
                 return next(request);
@@ -157,23 +160,23 @@ function update() {
 const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factories: Factories & readonly RouteFactory<T>[] & ValidateFactories<Factories, T>) => {
     type Routes = AccumulateRoutes<Factories, T>;
 
-    let instance = factories.reduce(
+    let router = factories.reduce(
             (router, factory) => factory(router as Router<T, { names: {}; paths: never }, { name: ''; path: ''; subdomain: '' }>),
             new Router<T, { names: {}; paths: never }, { name: ''; path: ''; subdomain: '' }>() as Router<T, Registry, { name: ''; path: ''; subdomain: '' }>
         ) as Router<T, Routes, { name: ''; path: ''; subdomain: '' }>,
         request = reactive<Request<T>>(Object.assign(href<T>(), { data: { parameters: undefined, route: undefined } }));
 
     if (requests.push(request) === 1) {
+        document.addEventListener('click', listener);
         window.addEventListener('popstate', update);
     }
 
-    let uri = instance.uri.bind(instance) as (name: string, params?: PathParamsObject<string>) => string;
+    let uri = router.uri.bind(router) as (name: string, params?: PathParamsObject<string>) => string;
 
     return {
         back,
         forward,
-        listener,
-        middleware: middleware(request, instance),
+        middleware: middleware(request, router),
         redirect: ((name: string, params?: PathParamsObject<string>) => {
             if (name.indexOf('://') !== -1) {
                 window.location.replace(name);
@@ -191,10 +194,11 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
             }
 
             if (requests.length === 0) {
+                document.removeEventListener('click', listener);
                 window.removeEventListener('popstate', update);
             }
         },
-        uri: instance.uri as ClientUri<Routes>
+        uri: router.uri as ClientUri<Routes>
     };
 };
 

@@ -186,12 +186,8 @@ type RegistryOf<F> =
         ? R
         : { names: {}; paths: never };
 
-type Request<T> = RequestState & {
+type Request<T> = {
     data: ReturnType<Router<T>['match']>;
-    subdomain?: string;
-};
-
-type RequestState = {
     hostname: string;
     href: string;
     method: string;
@@ -200,6 +196,7 @@ type RequestState = {
     port: string;
     protocol: string;
     query: Record<string, string>;
+    subdomain?: string;
 };
 
 type Route<T> = {
@@ -312,7 +309,7 @@ export type {
     PathParamsObject,
     RegisterNames, RegisterPaths,
     Registry,
-    Request, RequestState, Route, Router, RouteFactory, RouteOptions,
+    Request, Route, Router, RouteFactory, RouteOptions,
     UriArguments,
     ValidateFactories, ValidateName, ValidatePath
 };
