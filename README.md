@@ -48,10 +48,6 @@ app.uri('user', { id: 456 }); // '/users/456'
 // History navigation
 app.back();
 app.forward();
-
-// Intercept plain same-origin anchors so <a href="/users/456"> routes
-// without a full page reload. Bind it wherever suits your frontend.
-document.addEventListener('click', app.listener);
 ```
 
 ### Middleware

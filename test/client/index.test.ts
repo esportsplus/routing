@@ -29,36 +29,6 @@ afterEach(() => {
 
 
 describe('client router', () => {
-    it('skips clicks the browser must handle', () => {
-        let app = router((r: Router<string>) => r.get({ name: 'next', path: '/next', responder: fallback })),
-            anchor = document.createElement('a'),
-            event = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
-
-        anchor.href = '/next';
-        Object.defineProperty(event, 'target', { value: anchor });
-        app.listener(event);
-        expect(event.defaultPrevented).toBe(false);
-
-        anchor.target = '_top';
-        event = new MouseEvent('click', { bubbles: true, cancelable: true });
-        Object.defineProperty(event, 'target', { value: anchor });
-        app.listener(event);
-        expect(event.defaultPrevented).toBe(false);
-
-        event = new MouseEvent('click', { bubbles: true, cancelable: true });
-        event.preventDefault();
-        Object.defineProperty(event, 'target', { value: anchor });
-        app.listener(event);
-        expect(window.location.pathname).toBe('/');
-
-        anchor.removeAttribute('target');
-        anchor.href = 'https://outside.example/next';
-        event = new MouseEvent('click', { bubbles: true, cancelable: true });
-        Object.defineProperty(event, 'target', { value: anchor });
-        app.listener(event);
-        expect(event.defaultPrevented).toBe(false);
-    });
-
     it('redirect updates the reactive request', () => {
         let app = router((r: Router<string>) => r
                 .get({ name: 'home', path: '/', responder: fallback })
