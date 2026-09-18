@@ -9,24 +9,24 @@ importers:
   .:
     dependencies:
       '@esportsplus/reactivity':
-        specifier: ^0.36.5
-        version: 0.36.5
+        specifier: ^0.36.6
+        version: 0.36.6
       '@esportsplus/utilities':
         specifier: ^0.28.3
         version: 0.28.3
       '@types/node':
-        specifier: ^26.4.1
-        version: 26.4.1
+        specifier: ^26.6.1
+        version: 26.6.1
     devDependencies:
       '@esportsplus/typescript':
-        specifier: ^0.34.2
-        version: 0.34.2
+        specifier: ^0.34.3
+        version: 0.34.3
       happy-dom:
-        specifier: ^20.14.0
-        version: 20.14.0
+        specifier: ^20.14.5
+        version: 20.14.5
       vitest:
-        specifier: ^5.0.0
-        version: 5.0.0(@types/node@26.4.1)(happy-dom@20.14.0)(vite@8.0.2(@types/node@26.4.1))
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@26.6.1)(happy-dom@20.14.5)(vite@8.0.2(@types/node@26.6.1))
 
 packages:
 
@@ -42,11 +42,11 @@ packages:
   '@esportsplus/cli-passthrough@0.0.18':
     resolution: {integrity: sha512-Vk37QhV09aW/PKkwGULox5lYupMyZHl06XZtrxwltk0TDJCdkAgMGteG7AU4qohurlDC3GDhnv16lItYl7dfkw==}
 
-  '@esportsplus/reactivity@0.36.5':
-    resolution: {integrity: sha512-clENWEih+vz1fQkcTLT7JyNoIfOuNdRiO9puMWU5svrqIz0Mop88acKT369yw1cLsy1JuCtVIDCYVB6+3F666g==}
+  '@esportsplus/reactivity@0.36.6':
+    resolution: {integrity: sha512-58PEYitw58S9LbyTTb3ouXZzkiZBsvS69B79UJSS/MTkB8zIqxgdfDo7LOV1MPRgcxH8K3dlqeZkVaUFA2NvaQ==}
 
-  '@esportsplus/typescript@0.34.2':
-    resolution: {integrity: sha512-3D3vlqfb0reDj2QTdxDJh4ZKTv5vkvN5+oAk8+6xFZJXkt3f5D523LWyL69RJIDYwoKLdWJBZQdOV8M0qhg27g==}
+  '@esportsplus/typescript@0.34.3':
+    resolution: {integrity: sha512-YLwW8l4Stf/7KcP0ZihrqaVpScLB+DuV0JhDZP6YGEN1bJTwpjNxBvIWIfBTYbWIb3DzCj4zDE44YWoNDJXVRQ==}
     hasBin: true
 
   '@esportsplus/utilities@0.28.3':
@@ -193,6 +193,9 @@ packages:
   '@types/node@26.4.1':
     resolution: {integrity: sha512-k97ENvZWtvA6yqz5/FS6a7duDgOPEeOQOc2iKS/nY6mX6qJUKtLnWzQS+Xj6tXweyj6ZcTAK2Qecetnvi9nCLA==}
 
+  '@types/node@26.6.1':
+    resolution: {integrity: sha512-VqGJBMCtdhqkBUCcBLvywI0NJ+KLuVzgNnlBUNFOQjqVxzo2lxLUNg1DSey8+u2u6ktswSAxg+s68QLzWHNOuA==}
+
   '@types/whatwg-mimetype@3.0.2':
     resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
 
@@ -319,8 +322,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vitest/mocker@5.0.0':
-    resolution: {integrity: sha512-66PGTMIiVJP3t4a5yxU9qPtf7MdTBs8jmToMvy+HVflB3Yy13WJZTtPePdvU+wjRV02SKK5doLbSA6o9pwOmiA==}
+  '@vitest/mocker@5.0.1':
+    resolution: {integrity: sha512-6K1DoBNAPGvuOcSsGA4D6x+5zEEff/KmOOP3uetT2TrGpVfI+HRHRnJJfKi5ib/g1vx8IYHQD8s0pbJz8WQI7Q==}
     peerDependencies:
       msw: ^2.4.9
       vite: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -330,8 +333,8 @@ packages:
       vite:
         optional: true
 
-  '@vitest/spy@5.0.0':
-    resolution: {integrity: sha512-uy+luWBAPw9XfthoHi5AkfHUnuPYEESjl0p/r+meoBnU8bxg5GDQ3Ey8MjcJ6sqahkL4PFyrvfMJJBw7LbU06g==}
+  '@vitest/spy@5.0.1':
+    resolution: {integrity: sha512-rbto/mF/SGERxEgYOek7Xm6B9b+y+mVoo+f4b2LymYO8zM1b7uB5nHuhVMTP2hxdzgxvGiZYGxGIaMvL5y180Q==}
 
   anymatch@3.1.3:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
@@ -427,8 +430,8 @@ packages:
     resolution: {integrity: sha512-jhIXaOzy1sb8IyocaruWSn1TjmnBVs8Ayhcy83rmxNJ8q2uWKCAj3CnJY+KpGSXCueAPc0i05kVvVKtP1t9S3g==}
     engines: {node: '>=10'}
 
-  happy-dom@20.14.0:
-    resolution: {integrity: sha512-4bRh1KzRvKDnFNTlLhzT1RZTpkKhQbQDl9j+7GXszWsvuspYdo29k6OHRf4PwiM6oLb8r/pMWeYiJjkfod5AvQ==}
+  happy-dom@20.14.5:
+    resolution: {integrity: sha512-x/RzkpWO40bTjIoT30iQtt64FLLmH/iRcUCN2X//bLx7H3ifkdfPXyqsro/OYtqzIAhiLMMA7mmiOR9C3NOKjQ==}
     engines: {node: '>=20.0.0'}
 
   ignore@5.3.2:
@@ -651,6 +654,9 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
+
   vite@8.0.2:
     resolution: {integrity: sha512-1gFhNi+bHhRE/qKZOJXACm6tX4bA3Isy9KuKF15AgSRuRazNBOJfdDemPBU16/mpMxApDPrWvZ08DcLPEoRnuA==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -694,20 +700,20 @@ packages:
       yaml:
         optional: true
 
-  vitest@5.0.0:
-    resolution: {integrity: sha512-gpsMNoRhMjMktVxPtstOH4/PJuPyovVaMDr4oDilXaGH1EcqM2OE96SoHT2VIQ6fTGtTjqmHDrEu2X9RQiXf8Q==}
+  vitest@5.0.1:
+    resolution: {integrity: sha512-iA95lQbKEkvrtTkdAgnWbXfbipWiiWe/hDl2P5tMi6WFwD76G0NxXAGp/M9EOcYupeGJRr6wppMc7CoA41TQjg==}
     engines: {node: ^22.12.0 || ^24.0.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@opentelemetry/api': ^1.9.0
       '@types/node': ^22.0.0 || >=24.0.0
-      '@vitest/browser-playwright': 5.0.0
-      '@vitest/browser-preview': 5.0.0
+      '@vitest/browser-playwright': 5.0.1
+      '@vitest/browser-preview': 5.0.1
       '@vitest/browser-webdriverio': ^5.0.0-beta.5 || >=5.0.0
-      '@vitest/coverage-istanbul': 5.0.0
-      '@vitest/coverage-v8': 5.0.0
-      '@vitest/ui': 5.0.0
+      '@vitest/coverage-istanbul': 5.0.1
+      '@vitest/coverage-v8': 5.0.1
+      '@vitest/ui': 5.0.1
       happy-dom: '*'
       jsdom: '*'
       vite: ^6.4.0 || ^7.0.0 || ^8.0.0
@@ -793,11 +799,11 @@ snapshots:
 
   '@esportsplus/cli-passthrough@0.0.18': {}
 
-  '@esportsplus/reactivity@0.36.5':
+  '@esportsplus/reactivity@0.36.6':
     dependencies:
       '@esportsplus/utilities': 0.28.3
 
-  '@esportsplus/typescript@0.34.2':
+  '@esportsplus/typescript@0.34.3':
     dependencies:
       '@esportsplus/cli-passthrough': 0.0.18
       '@esportsplus/utilities': 0.28.3
@@ -906,6 +912,10 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
+  '@types/node@26.6.1':
+    dependencies:
+      undici-types: 8.9.0
+
   '@types/whatwg-mimetype@3.0.2': {}
 
   '@types/ws@8.18.1':
@@ -972,16 +982,16 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@vitest/mocker@5.0.0(vite@8.0.2(@types/node@26.4.1))':
+  '@vitest/mocker@5.0.1(vite@8.0.2(@types/node@26.6.1))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      '@vitest/spy': 5.0.0
+      '@vitest/spy': 5.0.1
       estree-walker: 3.0.3
       magic-string: 1.2.3
     optionalDependencies:
-      vite: 8.0.2(@types/node@26.4.1)
+      vite: 8.0.2(@types/node@26.6.1)
 
-  '@vitest/spy@5.0.0': {}
+  '@vitest/spy@5.0.1': {}
 
   anymatch@3.1.3:
     dependencies:
@@ -1074,7 +1084,7 @@ snapshots:
       merge2: 1.4.1
       slash: 3.0.0
 
-  happy-dom@20.14.0:
+  happy-dom@20.14.5:
     dependencies:
       '@types/node': 26.4.1
       '@types/whatwg-mimetype': 3.0.2
@@ -1285,7 +1295,9 @@ snapshots:
 
   undici-types@8.3.0: {}
 
-  vite@8.0.2(@types/node@26.4.1):
+  undici-types@8.9.0: {}
+
+  vite@8.0.2(@types/node@26.6.1):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.7
@@ -1293,13 +1305,13 @@ snapshots:
       rolldown: 1.0.0-rc.11
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 26.4.1
+      '@types/node': 26.6.1
       fsevents: 2.3.3
 
-  vitest@5.0.0(@types/node@26.4.1)(happy-dom@20.14.0)(vite@8.0.2(@types/node@26.4.1)):
+  vitest@5.0.1(@types/node@26.6.1)(happy-dom@20.14.5)(vite@8.0.2(@types/node@26.6.1)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.0(vite@8.0.2(@types/node@26.4.1))
+      '@vitest/mocker': 5.0.1(vite@8.0.2(@types/node@26.6.1))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -1310,11 +1322,11 @@ snapshots:
       tinybench: 6.1.4
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
-      vite: 8.0.2(@types/node@26.4.1)
+      vite: 8.0.2(@types/node@26.6.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 26.4.1
-      happy-dom: 20.14.0
+      '@types/node': 26.6.1
+      happy-dom: 20.14.5
     transitivePeerDependencies:
       - msw
 

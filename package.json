@@ -1,9 +1,9 @@
 {
     "author": "ICJR",
     "dependencies": {
-        "@esportsplus/reactivity": "^0.36.5",
+        "@esportsplus/reactivity": "^0.36.6",
         "@esportsplus/utilities": "^0.28.3",
-        "@types/node": "^26.4.1"
+        "@types/node": "^26.6.1"
     },
     "exports": {
         "./client": {
@@ -29,9 +29,9 @@
     },
     "type": "module",
     "devDependencies": {
-        "@esportsplus/typescript": "^0.34.2",
-        "happy-dom": "^20.14.0",
-        "vitest": "^5.0.0"
+        "@esportsplus/typescript": "^0.34.3",
+        "happy-dom": "^20.14.5",
+        "vitest": "^5.0.1"
     },
     "version": "0.10.7"
 }
