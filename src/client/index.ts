@@ -1,7 +1,7 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
 import { PACKAGE_NAME } from './constants';
 import { build, Router } from './router';
-import type { AccumulateRoutes, ClientRedirect, ClientUri, Group, Middleware, Next, PathParamsObject, Registry, Request, Route, RouteFactory, ValidateFactories } from './types';
+import type { AccumulateRoutes, Group, Middleware, Next, UriArguments, Registry, Request, Route, RouteFactory, ValidateFactories } from './types';
 
 
 let requests: Omit<Request<unknown>, 'data' | 'subdomain'>[] = [];
@@ -171,21 +171,21 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
         window.addEventListener('popstate', update);
     }
 
-    let uri = router.uri.bind(router) as (name: string, params?: PathParamsObject<string>) => string;
+    let uri = router.uri.bind(router);
 
     return {
         back,
         forward,
         middleware: middleware(request, router),
-        redirect: ((name: string, params?: PathParamsObject<string>) => {
+        redirect: <Name extends keyof Routes['names'] & string>(name: Name, ...values: UriArguments<Routes, Name>) => {
             if (name.indexOf('://') !== -1) {
                 window.location.replace(name);
                 return;
             }
 
-            window.history.pushState(null, '', uri(name, params));
+            window.history.pushState(null, '', uri(name, ...values));
             update();
-        }) as ClientRedirect<Routes>,
+        },
         shutdown: () => {
             let index = requests.indexOf(request);
 
@@ -198,15 +198,10 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
                 window.removeEventListener('popstate', update);
             }
         },
-        uri: router.uri as ClientUri<Routes>
+        uri
     };
 };
 
 
 export { router };
-export type {
-    ClientRedirect, ClientUri,
-    Middleware,
-    Next,
-    Request, Route, Router, RouteFactory
-} from './types';
+export type { Middleware, Next, Request, Route, Router, RouteFactory } from './types';

@@ -11,13 +11,6 @@ type AccumulateRoutes<Factories extends readonly RouteFactory<T>[], T> =
 type Bucket<Method extends string, Sub extends string> =
     `${Method}|${Uppercase<Sub extends 'www' ? '' : Sub>}`;
 
-type ClientRedirect<TRegistry extends Registry> =
-    (<Name extends keyof TRegistry['names'] & string>(name: Name, ...values: UriArguments<TRegistry, Name>) => void) &
-    ((url: `${string}://${string}`) => void);
-
-type ClientUri<TRegistry extends Registry> =
-    <Name extends keyof TRegistry['names'] & string>(name: Name, ...values: UriArguments<TRegistry, Name>) => string;
-
 type Cmp<A extends string, B extends string> =
     A extends `:${infer AN}`
         ? B extends `:${infer BN}` ? (Eq<AN, BN> extends true ? 'align' : 'conflict') : 'diverge'
@@ -300,7 +293,6 @@ type ValidatePath<TRegistry extends Registry, TGroup extends Group, Method exten
 
 export type {
     AccumulateRoutes,
-    ClientRedirect, ClientUri,
     Group,
     MergeGroup,
     Middleware,
