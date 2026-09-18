@@ -204,4 +204,4 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
 
 
 export { router };
-export type { Middleware, Next, Request, Route, Router, RouteFactory } from './types';
+export type { Middleware, Next, Request, Route, Router, RouteFactory, UriArguments } from './types';
