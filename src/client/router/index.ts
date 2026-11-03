@@ -59,6 +59,7 @@ class Router<T, TRegistry extends Registry = { names: {}; paths: never }, TGroup
     bucket: Record<string, Record<string, { root: Node<T>, static: Record<string, Route<T>> }>> = {};
     groups: Options<T>[] = [];
     routes: Record<string, Route<T>> = {};
+    private segments: Record<string, string[] | null> = {};
     subdomains: string[] | null = null;
 
 
@@ -122,6 +123,7 @@ class Router<T, TRegistry extends Registry = { names: {}; paths: never }, TGroup
 
         if (route.name) {
             this.routes[route.name] = route;
+            this.segments[route.name] = path ? path.split('/') : null;
         }
 
         if (path) {
@@ -274,12 +276,11 @@ class Router<T, TRegistry extends Registry = { names: {}; paths: never }, TGroup
 
     uri<Name extends keyof TRegistry['names'] & string>(name: Name, ...values: UriArguments<TRegistry, Name>): string {
         let input = ((values as readonly (Record<string, string | number | (string | number)[]> | (string | number)[])[])[0] ?? {}) as Record<string, string | number | (string | number)[]> | (string | number)[],
-            path = this.routes[name].path!,
             array = Array.isArray(input),
             named = input as Record<string, string | number | (string | number)[]>,
             positional = input as (string | number)[],
             resolved: (string | number)[] = [],
-            segments = path.split('/'),
+            segments = this.segments[name]!,
             v = 0;
 
         for (let i = 0, n = segments.length; i < n; i++) {
