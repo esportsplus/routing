@@ -1,6 +1,6 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
 import { PACKAGE_NAME } from './constants';
-import { Router, build } from './router';
+import { build, Router } from './router';
 import type { AccumulateRoutes, Group, Middleware, Next, Registry, Request, Route, RouteFactory, UriArguments, ValidateFactories } from './types';
 
 
