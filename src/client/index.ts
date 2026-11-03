@@ -1,7 +1,7 @@
 import { effect, reactive, root } from '@esportsplus/reactivity';
 import { PACKAGE_NAME } from './constants';
-import { build, Router } from './router';
-import type { AccumulateRoutes, Group, Middleware, Next, UriArguments, Registry, Request, Route, RouteFactory, ValidateFactories } from './types';
+import { Router, build } from './router';
+import type { AccumulateRoutes, Group, Middleware, Next, Registry, Request, Route, RouteFactory, UriArguments, ValidateFactories } from './types';
 
 
 let requests: Omit<Request<unknown>, 'data' | 'subdomain'>[] = [];

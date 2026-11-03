@@ -8,6 +8,8 @@
         "@esportsplus/typescript": "link:../typescript",
         "@types/node": "^26.6.6",
         "happy-dom": "^21.0.4",
+        "oxlint": "^1.90.0",
+        "oxlint-tsgolint": "^7.0.2005",
         "vitest": "^5.1.0"
     },
     "engines": {
@@ -32,8 +34,10 @@
     "scripts": {
         "bench": "vitest bench --run --reporter=verbose",
         "build": "tsc -p tsconfig.build.json",
+        "lint": "oxlint -c oxlintrc.json --type-aware --deny-warnings",
         "test": "vitest run",
         "typecheck": "tsc --noEmit",
+        "verify": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
         "-": "-",
         "prepare": "pnpm build",
         "prepublishOnly": "pnpm build"

@@ -11,6 +11,7 @@ class Node<T> {
 
 
     add(path: string, route: Route<T>) {
+        // oxlint-disable-next-line typescript/no-this-alias -- cursor that walks down from the root
         let node: Node<T> = this,
             segments = path.split('/');
 
@@ -55,6 +56,7 @@ class Node<T> {
         parameters?: Readonly<Record<string, string>>;
         route?: Readonly<Route<T>>;
     } {
+        // oxlint-disable-next-line typescript/no-this-alias -- cursor that walks down from the root
         let node: Node<T> | undefined = this,
             parameters: Record<string, string> | undefined,
             segments = path.split('/'),

@@ -264,7 +264,7 @@ describe('Node', () => {
             let result = root.find('users/5/posts/99');
 
             expect(result.route).toBe(r);
-            expect(result.parameters).toEqual({ userId: '5', postId: '99' });
+            expect(result.parameters).toEqual({ postId: '99', userId: '5' });
         });
 
         it('finds multi-segment static path', () => {

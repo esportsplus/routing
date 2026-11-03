@@ -11,10 +11,9 @@ let typed = router(
     (r: Router<Response>) => r.get({ name: 'typed', path: '/typed/:id', responder: () => ({ body: 'typed' }) })
 );
 
-let auth: Middleware<Response> = (request, next) => next(request),
-    typedResponse: Response = typed.middleware(auth, typed.middleware.dispatch);
+let auth: Middleware<Response> = (request, next) => next(request);
 
-typedResponse;
+typed.middleware(auth, typed.middleware.dispatch) satisfies Response;
 typed.uri('typed', { id: 1 });
 
 router(
@@ -145,9 +144,9 @@ let grouped = router(
         )
 );
 
-grouped.uri('api.users', { org: 1, id: 2 });
+grouped.uri('api.users', { id: 2, org: 1 });
 // @ts-expect-error relative name is not registered
-grouped.uri('users', { org: 1, id: 2 });
+grouped.uri('users', { id: 2, org: 1 });
 // @ts-expect-error group parameter :org is required
 grouped.uri('api.users', { id: 2 });
 

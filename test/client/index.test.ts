@@ -47,8 +47,8 @@ describe('client router', () => {
         setUrl('https://api-v2.example.com/');
 
         let app = router((r: Router<string>) => r
-                .get({ path: '/', subdomain: 'api', responder: (request) => request.subdomain || '' })
-                .get({ path: '/', subdomain: 'api-v2', responder: (request) => request.subdomain || '' })
+                .get({ path: '/', responder: (request) => request.subdomain || '', subdomain: 'api' })
+                .get({ path: '/', responder: (request) => request.subdomain || '', subdomain: 'api-v2' })
             ),
             match = app.middleware.match(route()),
             run = () => app.middleware(match, app.middleware.dispatch);
@@ -56,7 +56,7 @@ describe('client router', () => {
         expect(run()).toBe('api-v2');
 
         setUrl('https://apiary.example.com/');
-        app = router((r: Router<string>) => r.get({ path: '/', subdomain: 'api', responder: (request) => request.subdomain || '' }));
+        app = router((r: Router<string>) => r.get({ path: '/', responder: (request) => request.subdomain || '', subdomain: 'api' }));
         match = app.middleware.match(route());
         run = () => app.middleware(match, app.middleware.dispatch);
 
