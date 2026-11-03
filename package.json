@@ -1,9 +1,17 @@
 {
     "author": "ICJR",
     "dependencies": {
-        "@esportsplus/reactivity": "^0.40.0",
-        "@esportsplus/utilities": "^0.28.6",
-        "@types/node": "^26.6.2"
+        "@esportsplus/reactivity": "link:../reactivity",
+        "@esportsplus/utilities": "^0.28.6"
+    },
+    "devDependencies": {
+        "@esportsplus/typescript": "link:../typescript",
+        "@types/node": "^26.6.6",
+        "happy-dom": "^21.0.4",
+        "vitest": "^5.1.0"
+    },
+    "engines": {
+        "node": ">=26"
     },
     "exports": {
         "./client": {
@@ -15,6 +23,7 @@
         "build"
     ],
     "name": "@esportsplus/routing",
+    "packageManager": "pnpm@11.10.0",
     "private": false,
     "repository": {
         "type": "git",
@@ -24,15 +33,11 @@
         "bench": "vitest bench --run --reporter=verbose",
         "build": "tsc -p tsconfig.build.json",
         "test": "vitest run",
+        "typecheck": "tsc --noEmit",
         "-": "-",
         "prepare": "pnpm build",
         "prepublishOnly": "pnpm build"
     },
     "type": "module",
-    "devDependencies": {
-        "@esportsplus/typescript": "^0.37.0",
-        "happy-dom": "^20.14.5",
-        "vitest": "^5.0.1"
-    },
     "version": "0.11.8"
 }
