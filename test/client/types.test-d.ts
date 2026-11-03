@@ -131,6 +131,10 @@ app.uri('files');
 
 app.redirect('user', { id: 1 });
 app.redirect('https://example.com/away');
+// @ts-expect-error external URL takes no parameters
+app.redirect('https://example.com/away', { id: 1 });
+// @ts-expect-error unregistered name that is not a URL
+app.redirect('missing');
 // @ts-expect-error required parameter cannot be omitted
 app.redirect('user');
 

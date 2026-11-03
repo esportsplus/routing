@@ -177,13 +177,13 @@ const router = <T, const Factories extends readonly RouteFactory<T>[]>(...factor
         back,
         forward,
         middleware: middleware(request, router),
-        redirect: <Name extends keyof Routes['names'] & string>(name: Name, ...values: UriArguments<Routes, Name>) => {
+        redirect: <Name extends (keyof Routes['names'] & string) | `${string}://${string}`>(name: Name, ...values: Name extends keyof Routes['names'] ? UriArguments<Routes, Name> : []) => {
             if (name.indexOf('://') !== -1) {
                 window.location.replace(name);
                 return;
             }
 
-            window.history.pushState(null, '', uri(name, ...values));
+            window.history.pushState(null, '', uri(name as keyof Routes['names'] & string, ...values as UriArguments<Routes, keyof Routes['names'] & string>));
             update();
         },
         shutdown: () => {
