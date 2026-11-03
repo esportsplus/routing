@@ -1,39 +1,54 @@
-import { bench, describe } from 'vitest';
 import { Router } from '../src/client/router';
+import { test } from 'vitest';
 
 
 let responder = () => 'x';
 
+
 function build() {
-    let router = new Router<string>();
-
-    router.get({ path: '/', responder });
-    router.get({ path: '/about', responder });
-    router.get({ path: '/users/:id', responder });
-    router.get({ path: '/users/:id/posts/:postId/comments', responder });
-    router.get({ path: '/files/*:path', responder });
-
-    return router;
+    return new Router<string>()
+        .get({ name: 'about', path: '/about', responder })
+        .get({ name: 'comments', path: '/users/:id/posts/:postId/comments', responder })
+        .get({ name: 'files', path: '/files/*:path', responder })
+        .get({ name: 'home', path: '/', responder })
+        .get({ name: 'optional', path: '/archive/:year/?:month', responder })
+        .get({ name: 'user', path: '/users/:id', responder });
 }
 
 
 let router = build();
 
 
-describe('Router.match', () => {
-    bench('static hit', () => {
-        router.match('GET', '/about');
-    });
+test('Router.match', async ({ bench }) => {
+    await bench.compare(
+        bench('static hit', () => {
+            router.match('GET', '/about');
+        }),
+        bench('3-deep param hit', () => {
+            router.match('GET', '/users/1/posts/2/comments');
+        }),
+        bench('wildcard fallback', () => {
+            router.match('GET', '/files/a/b/c.txt');
+        }),
+        bench('miss', () => {
+            router.match('GET', '/nope/nope/nope');
+        })
+    );
+});
 
-    bench('3-deep param hit', () => {
-        router.match('GET', '/users/1/posts/2/comments');
-    });
-
-    bench('wildcard fallback', () => {
-        router.match('GET', '/files/a/b/c.txt');
-    });
-
-    bench('miss', () => {
-        router.match('GET', '/nope/nope/nope');
-    });
+test('Router.uri', async ({ bench }) => {
+    await bench.compare(
+        bench('static', () => {
+            router.uri('about');
+        }),
+        bench('2 named params', () => {
+            router.uri('comments', { id: 1, postId: 2 });
+        }),
+        bench('optional omitted', () => {
+            router.uri('optional', { year: 2026 });
+        }),
+        bench('wildcard', () => {
+            router.uri('files', { path: ['a', 'b', 'c.txt'] });
+        })
+    );
 });

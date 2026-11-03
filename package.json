@@ -21,6 +21,7 @@
         "url": "https://github.com/esportsplus/routing"
     },
     "scripts": {
+        "bench": "vitest bench --run --reporter=verbose",
         "build": "tsc -p tsconfig.build.json",
         "test": "vitest run",
         "-": "-",
