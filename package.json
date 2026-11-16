@@ -9,7 +9,7 @@
         "@types/node": "^26.6.6",
         "happy-dom": "^21.0.4",
         "oxlint": "^1.93.0",
-        "oxlint-tsgolint": "^7.0.2006",
+        "oxlint-tsgolint": "^7.0.2007",
         "vitest": "^5.1.0"
     },
     "engines": {
