@@ -10,7 +10,7 @@
         "happy-dom": "^21.0.4",
         "oxlint": "^1.94.0",
         "oxlint-tsgolint": "^7.0.2007",
-        "vitest": "^5.1.0"
+        "vitest": "^5.1.1"
     },
     "engines": {
         "node": ">=26"
